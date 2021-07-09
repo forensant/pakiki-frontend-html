@@ -163,6 +163,9 @@
                 let vm = this
 
                 if(injectObj.GUID == this.$route.params.scan_id) {
+                    if(injectObj.DoNotRecord) {
+                        injectObj.Title = this.selectedScan.Title
+                    }
                     this.selectedScan = injectObj
                 }
 
