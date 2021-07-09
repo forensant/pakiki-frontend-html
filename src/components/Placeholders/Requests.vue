@@ -22,7 +22,7 @@
                 </div>
             </v-col>
             <v-col md="4" class="pl-10 mt-10">
-                <v-img src="/images/HappyLaptop.svg" alt="Laptop With Coffee"></v-img>
+                <v-img contain src="/images/HappyLaptop.svg" alt="Laptop With Coffee"></v-img>
             </v-col>
         </v-row>
     </v-card>

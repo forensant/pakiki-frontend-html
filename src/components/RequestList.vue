@@ -29,6 +29,7 @@
             key-field="GUID"
             ref="scroller"
         >
+            
             <template #before>
                 <div class="grid headers">
                     <span v-for="col in columns" :key="col.col">
@@ -260,6 +261,7 @@
                 vm.requests = vm.requests.concat(response.data)
                 if(vm.initialLoad && vm.scanID == undefined) {
                     vm.scrollToBottom()
+                    vm.initialLoad = false
                 }
             })
         },
@@ -587,6 +589,20 @@
 
     .theme--dark .headers a {
         color: white;
+    }
+
+    .theme--light .headers {
+        background-color: white;
+    }
+
+    .theme--dark .headers {
+        background-color: black;
+    }
+
+    .vue-recycle-scroller__slot {
+        position: sticky;
+        top: 0;
+        z-index: 1;
     }
 
 </style>

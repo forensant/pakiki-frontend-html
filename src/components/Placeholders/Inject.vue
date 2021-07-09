@@ -21,7 +21,7 @@
                 </div>
             </v-col>
             <v-col md="4" class="pl-10 pt-10 pr-5">
-                <v-img src="/images/Pinchy.svg" alt="Conveyor belt with a robotic arm"></v-img>
+                <v-img contain src="/images/Pinchy.svg" alt="Conveyor belt with a robotic arm"></v-img>
             </v-col>
         </v-row>
     </v-card>

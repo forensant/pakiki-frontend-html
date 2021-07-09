@@ -49,7 +49,6 @@
             </v-list-item-icon>
             <v-list-item-title>Settings</v-list-item-title>
           </v-list-item>
-          
         </v-list-item-group>
 
       </v-list>
