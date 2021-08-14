@@ -222,29 +222,35 @@
     },
 
     methods: {
-        run: function() {
-            let vm = this
-            this.loading = true
+        ensureSeparatorValidity: function() {
+            var startCharacter = String.fromCharCode(187); // »
+            var endCharacter   = String.fromCharCode(171); // «
 
-            let request = {
-                request:     window.btoa(this.request),
-                ssl:         (this.protocol == 'http://' ? false : true),
-                host:        this.hostname,
-                fuzzDB:      this.fuzzDBSelected,
-                knownFiles:  this.knownFilesSelected,
-                iterateFrom: parseInt(this.iterateFrom),
-                iterateTo:   parseInt(this.iterateTo),
-                title:       this.title,
+            var separatorCount = 0;
+
+            for(var i = 0; i < this.request.length; i++) {
+                var chr = this.request.charAt(i);
+                if(chr != startCharacter && chr != endCharacter) {
+                    continue;
+                }
+
+                separatorCount += 1;
+
+                if(separatorCount % 2 == 1 && chr != startCharacter) {
+                    this.request = this.request.substring(0, i)
+                            + startCharacter
+                            + this.request.substring(i + 1, this.request.length);
+                }
+
+                if(separatorCount % 2 == 0 && chr != endCharacter) {
+                    this.request = this.request.substring(0, i)
+                            + endCharacter
+                            + this.request.substring(i + 1, this.request.length);
+                }
+                
             }
-
-            this.$http.post('/inject_operations/run', request)
-            .then(function (response) {
-                vm.$router.push({path: '/inject/' + response.data.GUID})
-            })
         },
         insertSeparatorIntoRequest: function() {
-            // TODO: submit this to the backend and then code that up
-
             var requestControl = document.getElementById("textarea_request");
             var startCharacter = String.fromCharCode(187); // »
             var endCharacter   = String.fromCharCode(171); // «
@@ -314,34 +320,40 @@
                     requestControl.focus();
                 }
             }
+            this.requestToInjectFormat();
         },
-        ensureSeparatorValidity: function() {
-            var startCharacter = String.fromCharCode(187); // »
-            var endCharacter   = String.fromCharCode(171); // «
+        requestToInjectFormat: function() {
+            var components = this.request.split(/[»«]/)
+            var request = []
 
-            var separatorCount = 0;
-
-            for(var i = 0; i < this.request.length; i++) {
-                var chr = this.request.charAt(i);
-                if(chr != startCharacter && chr != endCharacter) {
-                    continue;
-                }
-
-                separatorCount += 1;
-
-                if(separatorCount % 2 == 1 && chr != startCharacter) {
-                    this.request = this.request.substring(0, i)
-                            + startCharacter
-                            + this.request.substring(i + 1, this.request.length);
-                }
-
-                if(separatorCount % 2 == 0 && chr != endCharacter) {
-                    this.request = this.request.substring(0, i)
-                            + endCharacter
-                            + this.request.substring(i + 1, this.request.length);
-                }
-                
+            for(var i = 0; i < components.length; i++) {
+                request.push({
+                    text: window.btoa(components[i]),
+                    inject: (i % 2 == 1 ? true : false)
+                })
             }
+
+            return request
+        },
+        run: function() {
+            let vm = this
+            this.loading = true
+
+            let request = {
+                request:     requestToInjectFormat,
+                ssl:         (this.protocol == 'http://' ? false : true),
+                host:        this.hostname,
+                fuzzDB:      this.fuzzDBSelected,
+                knownFiles:  this.knownFilesSelected,
+                iterateFrom: parseInt(this.iterateFrom),
+                iterateTo:   parseInt(this.iterateTo),
+                title:       this.title,
+            }
+
+            this.$http.post('/inject_operations/run', request)
+            .then(function (response) {
+                vm.$router.push({path: '/inject/' + response.data.GUID})
+            })
         }
     },
 
