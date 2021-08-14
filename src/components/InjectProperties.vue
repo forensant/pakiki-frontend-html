@@ -47,8 +47,8 @@
                             <v-col md="6">
                                 <v-text-field v-model="hostname" label="Hostname" />
                             </v-col>
-                            <v-col md="1">
-                                <v-btn @click="insertSeparatorIntoRequest">Insert</v-btn>
+                            <v-col md="4">
+                                <v-btn class="mt-3" @click="insertSeparatorIntoRequest">Insert Separator</v-btn>
                             </v-col>
                         </v-row>
 
@@ -243,9 +243,7 @@
             })
         },
         insertSeparatorIntoRequest: function() {
-            // TODO next: syntax highlighting
-            // figure out what feels like the right behaviour if a selection is added into the middle of the structure
-            // finally, figure out the backend
+            // TODO: submit this to the backend and then code that up
 
             var requestControl = document.getElementById("textarea_request");
             var startCharacter = String.fromCharCode(187); // »
@@ -268,6 +266,8 @@
                     this.request = this.request.substring(0, startPos)
                         + value
                         + this.request.substring(endPos, this.request.length);
+
+                    this.ensureSeparatorValidity()
 
                     // allow a second for the other events to popagate
                     setTimeout(() => {
@@ -313,6 +313,34 @@
                     }, 10);
                     requestControl.focus();
                 }
+            }
+        },
+        ensureSeparatorValidity: function() {
+            var startCharacter = String.fromCharCode(187); // »
+            var endCharacter   = String.fromCharCode(171); // «
+
+            var separatorCount = 0;
+
+            for(var i = 0; i < this.request.length; i++) {
+                var chr = this.request.charAt(i);
+                if(chr != startCharacter && chr != endCharacter) {
+                    continue;
+                }
+
+                separatorCount += 1;
+
+                if(separatorCount % 2 == 1 && chr != startCharacter) {
+                    this.request = this.request.substring(0, i)
+                            + startCharacter
+                            + this.request.substring(i + 1, this.request.length);
+                }
+
+                if(separatorCount % 2 == 0 && chr != endCharacter) {
+                    this.request = this.request.substring(0, i)
+                            + endCharacter
+                            + this.request.substring(i + 1, this.request.length);
+                }
+                
             }
         }
     },
