@@ -53,9 +53,17 @@
                 <td class="header">Request:</td>
                 <td class="table-details"><pre>{{requestData}}</pre></td>
             </tr>
-            <tr v-if="requestData != ''">
+            <tr class="pt-2" v-if="modifiedRequestData != ''">
+                <td class="header">Modified Request:</td>
+                <td class="table-details"><pre>{{modifiedRequestData}}</pre></td>
+            </tr>
+            <tr class="pt-2" v-if="responseData != ''">
                 <td class="header">Response:</td>
                 <td class="table-deatils"><pre>{{responseData}}</pre></td>
+            </tr>
+            <tr class="pt-2" v-if="modifiedResponseData != ''">
+                <td class="header">Modified Response:</td>
+                <td class="table-deatils"><pre>{{modifiedResponseData}}</pre></td>
             </tr>
         </table>
 
@@ -78,6 +86,8 @@
 
     data: () => ({
         loading: true,
+        modifiedRequestData: '',
+        modifiedResponseData: '',
         requestData: '',
         responseData: '',
         selectedTab: 'tab-requests'
@@ -118,6 +128,8 @@
                 .then(function (response) {
                     vm.requestData  = window.atob(response.data.Request)
                     vm.responseData = window.atob(response.data.Response)
+                    vm.modifiedRequestData  = window.atob(response.data.ModifiedRequest)
+                    vm.modifiedResponseData = window.atob(response.data.ModifiedResponse)
                     vm.loading = false
                 })
         }
