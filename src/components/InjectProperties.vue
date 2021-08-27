@@ -320,7 +320,6 @@
                     requestControl.focus();
                 }
             }
-            this.requestToInjectFormat();
         },
         requestToInjectFormat: function() {
             var components = this.request.split(/[»«]/)
@@ -328,8 +327,8 @@
 
             for(var i = 0; i < components.length; i++) {
                 request.push({
-                    text: window.btoa(components[i]),
-                    inject: (i % 2 == 1 ? true : false)
+                    RequestPart: window.btoa(components[i]),
+                    Inject: (i % 2 == 1 ? true : false)
                 })
             }
 
@@ -340,7 +339,7 @@
             this.loading = true
 
             let request = {
-                request:     requestToInjectFormat,
+                request:     this.requestToInjectFormat(),
                 ssl:         (this.protocol == 'http://' ? false : true),
                 host:        this.hostname,
                 fuzzDB:      this.fuzzDBSelected,
