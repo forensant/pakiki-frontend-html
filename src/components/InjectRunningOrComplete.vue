@@ -151,7 +151,19 @@
             this.$http.put('/scripts/cancel', bodyFormData)
         },
         requestDecode: function(scan) {
-            return window.atob(scan.Request);
+            var req = ""
+            scan.Request.forEach(requestPart => {
+                if(requestPart.Inject) {
+                    req += "»"
+                }
+
+                req += window.atob(requestPart.RequestPart)
+                
+                if(requestPart.Inject) {
+                    req += "«"
+                }
+            })
+            return req
         },
         updateTitle: function() {
             let vm = this
