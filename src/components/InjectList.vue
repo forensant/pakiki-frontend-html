@@ -154,7 +154,7 @@
 
         destroyed: function() {
             this.closingList = true
-            this.connection.close()
+            this.connection.close(1001) // going away
             this.connection = null
         },
 
@@ -226,7 +226,7 @@
                 let vm = this
 
                 if(this.connection != null) {
-                    this.connection.close()
+                    this.connection.close(1001); // going away
                 }
                 
                 this.connection = new WebSocket(this.$websocketUrl);
@@ -243,7 +243,7 @@
                 
                 this.connection.onerror = function() {
                     if(this.connection != null) {
-                        this.connection.close();
+                        this.connection.close(1002); // protocol error
                     }
                 };
                 

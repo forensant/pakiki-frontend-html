@@ -46,6 +46,12 @@
                         v-model="http11UpstreamProxyAddress"
                         outlined
                     ></v-text-field>
+
+                    <v-text-field
+                        label="Concurrent Connections per Host"
+                        v-model="maxConnectionsPerHost"
+                        outlined
+                    ></v-text-field>
                 </v-list-item-content>
             </v-list-item>
 
@@ -101,6 +107,7 @@
                 theme: '',
                 http11ProxyAddress: '',
                 http11UpstreamProxyAddress: '',
+                maxConnectionsPerHost: '',
                 proxyError: ''
             }
         },
@@ -112,6 +119,7 @@
                 this.$http.put('/proxy/settings', {
                     Http11ProxyAddr: vm.http11ProxyAddress,
                     Http11UpstreamProxyAddr: vm.http11UpstreamProxyAddress,
+                    MaxConnectionsPerHost: parseInt(this.maxConnectionsPerHost)
                 }).then(function (response) {
                     if(response.status != 200) {
                         vm.proxyError = response.data
@@ -141,6 +149,7 @@
                 .then(function (response) {
                     vm.http11ProxyAddress = response.data.Http11ProxyAddr
                     vm.http11UpstreamProxyAddress = response.data.Http11UpstreamProxyAddr
+                    vm.maxConnectionsPerHost = response.data.MaxConnectionsPerHost
                 })
         }
     }
