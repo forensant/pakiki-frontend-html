@@ -186,8 +186,10 @@
 
     destroyed: function() {
         this.closingList = true
-        this.connection.close(1001) // going away
-        this.connection = null
+        if(this.connection != null && this.connection.readyState == 1) {
+            this.connection.close(1000) // normal closure
+            this.connection = null
+        }
     },
 
     methods: {

@@ -207,7 +207,7 @@
           request:            '',
           customFiles:        [],
           fuzzDBItems:        [],
-          fuzzDBSearch:       null,
+          fuzzDBSearch:       '',
           fuzzDBSelected:     [],
           iterateFrom:        '',
           iterateTo:          '',
@@ -384,7 +384,8 @@
 
             this.$http.post('/inject_operations/run', request)
             .then(function (response) {
-                vm.$router.push({path: '/inject/' + response.data.GUID})
+                var guid = response.data.GUID
+                vm.$router.push({path: `/inject/${guid}`})
             }).finally(function() {
                 vm.runDisabled = false
                 vm.processingClass = "d-none"
