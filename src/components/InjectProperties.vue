@@ -7,6 +7,11 @@
             <v-toolbar-title>Request Details</v-toolbar-title>
             <v-spacer></v-spacer>
 
+            <v-progress-circular
+                :class="processingClass"
+                indeterminate
+            ></v-progress-circular>
+
             <v-tooltip bottom>
                 <template v-slot:activator="{ on, attrs }">
                     <v-btn
@@ -14,6 +19,7 @@
                         icon
                         v-bind="attrs"
                         v-on="on"
+                        :disabled="runDisabled"
                     >
                         <v-icon>mdi-send</v-icon>
                     </v-btn>
@@ -72,86 +78,73 @@
                     <v-card-text>
                         <v-row>
                             <v-col md="4">
-                                <v-card outlined>
+                                <v-card outlined max-height="400" height="400" class="overflow-y-auto">
                                     <v-card-title>FuzzDB</v-card-title>
-                                    <v-list>
+                                    <v-card-text>
+                                    
+                                    <v-row class="mb-2">
+                                        <v-col>
+                                            <v-text-field
+                                                v-model="fuzzDBSearch"
+                                                label="Search Payloads"
+                                                hide-details
+                                                clearable
+                                                outlined
+                                                dense
+                                                clear-icon="mdi-close-circle-outline"
+                                            ></v-text-field>
+                                        </v-col>
+                                    </v-row>
 
-                                        <v-list-item-group
-                                            v-model="fuzzDBSelected"
-                                            multiple
-                                        >
-
-                                            <template v-for="(item) in fuzzDBItems">
-                                                <v-list-item
-                                                    :key="item.Filename"
-                                                    :value="item.Filename"
-                                                >
-                                                    <template v-slot:default="{ active }">
-                                                        <v-tooltip bottom>
-                                                            <template v-slot:activator="{ on, attrs }">
-                                                                <v-list-item-content v-bind="attrs" v-on="on">
-                                                                    <v-list-item-title v-text="item.Title"></v-list-item-title>
-                                                                </v-list-item-content>
-
-                                                                <v-list-item-action>
-                                                                    <v-checkbox
-                                                                    :input-value="active"
-                                                                    color="green"
-                                                                    ></v-checkbox>
-                                                                </v-list-item-action>
-                                                            </template>
-                                                            <span>
-                                                                <strong>Sample payloads:</strong><br>
-                                                                <div v-for="(payload, idx) in item.SamplePayloads" :key="idx">
-                                                                    {{payload}}
-                                                                </div>
-                                                            </span>
-                                                        </v-tooltip>
-                                                    </template>
-                                                </v-list-item>
-                                            </template>
-                                        </v-list-item-group>
-                                    </v-list>
+                                    <v-treeview
+                                        v-model="fuzzDBSelected"
+                                        selectable
+                                        :items="fuzzDBItems"
+                                        item-children="SubEntries"
+                                        item-text=""
+                                        item-key="ResourcePath"
+                                        :filter="filterFuzzDB"
+                                        :search="fuzzDBSearch"
+                                        activatable
+                                        dense
+                                    >
+                                        <template v-slot:prepend="{ item }">
+                                        
+                                            <v-tooltip bottom v-if="item.SubEntries.length == 0">
+                                                <template v-slot:activator="{ on, attrs }">
+                                                    <span
+                                                        v-bind="attrs"
+                                                        v-on="on"
+                                                    >{{item.Title}}</span>
+                                                </template>
+                                                <span>
+                                                    <strong>Sample payloads:</strong><br>
+                                                    <div v-for="(payload, idx) in item.SamplePayloads" :key="idx">
+                                                        {{payload}}
+                                                    </div>
+                                                </span>
+                                            </v-tooltip>
+                                            <span v-else>
+                                                {{item.Title}}
+                                            </span>
+                                        </template>
+                                    </v-treeview>
+                                  </v-card-text>
                                 </v-card>
                             </v-col>
 
                             <v-col md="4">
                                 <v-card outlined>
-                                    <v-card-title>Known Files</v-card-title>
-                                    <v-list>
-
-                                        <v-list-item-group
-                                            v-model="knownFilesSelected"
+                                    <v-card-title>Custom Files</v-card-title>
+                                    <v-card-text>
+                                        <v-file-input
+                                            v-model="customFiles"
                                             multiple
-                                        >
-                                            <template v-for="(item) in knownFileItems">
-                                                <v-list-item :key="item.Filename" :value="item.Filename">
-                                                    <template v-slot:default="{ active }">
-                                                        <v-tooltip bottom>
-                                                            <template v-slot:activator="{ on, attrs }">
-                                                                <v-list-item-content v-bind="attrs" v-on="on">
-                                                                    <v-list-item-title v-text="item.Title"></v-list-item-title>
-                                                                </v-list-item-content>
-
-                                                                <v-list-item-action>
-                                                                    <v-checkbox
-                                                                    :input-value="active"
-                                                                    color="green"
-                                                                    ></v-checkbox>
-                                                                </v-list-item-action>
-                                                            </template>
-                                                            <span>
-                                                                <strong>Sample payloads:</strong><br>
-                                                                <div v-for="(payload, idx) in item.SamplePayloads" :key="idx">
-                                                                    {{payload}}
-                                                                </div>
-                                                            </span>
-                                                        </v-tooltip>
-                                                    </template>
-                                                </v-list-item>
-                                            </template>
-                                        </v-list-item-group>
-                                    </v-list>
+                                            outlined
+                                            dense
+                                            label=""
+                                        ></v-file-input>
+                                    </v-card-text>
                                 </v-card>
                             </v-col>
 
@@ -184,6 +177,7 @@
                             dark
                             elevation="2"
                             @click="run"
+                            :disabled="runDisabled"
                         >
                             Run
                             <v-icon right>mdi-send</v-icon>
@@ -205,19 +199,22 @@
 
     data () {
       return {
-          title: '',
-          hostname:      '',
-          loading:       false,
-          protocol:      'https://',
-          protocolItems: ['https://', 'http://'],
-          request:       '',
-          fuzzDBItems: [],
-          knownFileItems: [],
-          fuzzDBSelected: [],
-          knownFilesSelected: [],
-          iterateFrom: '',
-          iterateTo: '',
-          injectPointError: '',
+          title:              '',
+          hostname:           '',
+          loading:            false,
+          protocol:           'https://',
+          protocolItems:      ['https://', 'http://'],
+          request:            '',
+          customFiles:        [],
+          fuzzDBItems:        [],
+          fuzzDBSearch:       null,
+          fuzzDBSelected:     [],
+          iterateFrom:        '',
+          iterateTo:          '',
+          injectPointError:   '',
+
+          processingClass:    "d-none",
+          runDisabled:        false,
       }
     },
 
@@ -336,23 +333,68 @@
         },
         run: function() {
             let vm = this
+            vm.runDisabled = true
+            vm.processingClass = ""
+            let customFilePayloads = []
+
+            // files
+            let filesProcessed = 0
+            for (let file of this.customFiles) {
+                var reader = new FileReader();
+
+                reader.onload = function (event) {
+                    let contents = event.target.result
+                    customFilePayloads = customFilePayloads.concat(contents.split("\n"))
+
+                    filesProcessed++
+
+                    if(filesProcessed >= vm.customFiles.length) {
+                        vm.sendRequest(customFilePayloads)
+                    }
+                }
+
+                reader.readAsText(file)
+            }
+
+            if(this.customFiles.length == 0) {
+                this.sendRequest([])
+            }
+
+        },
+        sendRequest: function (customFilePayloads) {
+            let vm = this
             this.loading = true
+            let customFilenames = []
+
+            for (let file of this.customFiles) {
+                customFilenames.push(file.name)
+            }
 
             let request = {
-                request:     this.requestToInjectFormat(),
-                ssl:         (this.protocol == 'http://' ? false : true),
-                host:        this.hostname,
-                fuzzDB:      this.fuzzDBSelected,
-                knownFiles:  this.knownFilesSelected,
-                iterateFrom: parseInt(this.iterateFrom),
-                iterateTo:   parseInt(this.iterateTo),
-                title:       this.title,
+                request:         this.requestToInjectFormat(),
+                ssl:             (this.protocol == 'http://' ? false : true),
+                host:            this.hostname,
+                fuzzDB:          this.fuzzDBSelected,
+                customPayloads:  customFilePayloads,
+                customFilenames: customFilenames,
+                iterateFrom:     parseInt(this.iterateFrom),
+                iterateTo:       parseInt(this.iterateTo),
+                title:           this.title,
             }
 
             this.$http.post('/inject_operations/run', request)
             .then(function (response) {
                 vm.$router.push({path: '/inject/' + response.data.GUID})
-            })
+            }).finally(function() {
+                vm.runDisabled = false
+                vm.processingClass = "d-none"
+            });
+        }
+    },
+
+    computed: {
+        filterFuzzDB() {
+            return (item, search) => item.Title.toLowerCase().indexOf(search.toLowerCase()) != -1
         }
     },
 
@@ -361,8 +403,7 @@
 
         this.$http.get('/inject_operations/payloads')
             .then(function (response) {
-                vm.fuzzDBItems = response.data.Attack
-                vm.knownFileItems = response.data.KnownFiles
+                vm.fuzzDBItems = response.data.SubEntries
             })
 
         if('request_id' in this.$route.params) {
