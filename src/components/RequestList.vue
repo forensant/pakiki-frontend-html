@@ -1,147 +1,168 @@
 <template>
-    <v-card height="calc(100vh - 50px)" class="pl-10 pr-10 pt-5" elevation="0" tiled v-if="loading || requests.length != 0 || scanID != undefined || search != ''">
-        <v-row>
-            <v-col md="6">
-            </v-col>
-            <v-col md="4">
-                <v-text-field
-                    v-model="search"
-                    append-icon="mdi-magnify"
-                    label="Search"
-                    class="mr-4 mb-0"
-                    @change="onSearch"
-                ></v-text-field>
-            </v-col>
+    <div :style="cssVars">
+        <v-card height="calc(100vh - 50px)" class="pl-10 pr-10 pt-5" elevation="0" tiled v-if="loading || requests.length != 0 || scanID != undefined || search != ''">
+            <v-row>
+                <v-col md="6">
+                </v-col>
+                <v-col md="4">
+                    <v-text-field
+                        v-model="search"
+                        append-icon="mdi-magnify"
+                        label="Search"
+                        class="mr-4 mb-0"
+                        @change="onSearch"
+                    ></v-text-field>
+                </v-col>
+                    
+                    <v-col md="2">
+                    <v-checkbox
+                        v-model="excludeResources"
+                        label="Exclude Resources"
+                        class=""
+                    ></v-checkbox>
+                </v-col>
+            </v-row>
+
+            <DynamicScroller
+                class="scroller"
+                :items="requests"
+                :min-item-size="32"
+                key-field="GUID"
+                ref="scroller"
+            >
                 
-                <v-col md="2">
-                <v-checkbox
-                    v-model="excludeResources"
-                    label="Exclude Resources"
-                    class=""
-                ></v-checkbox>
-            </v-col>
-        </v-row>
+                <template #before>
+                    <div class="grid headers" @contextmenu="onTableHeaderRightClick">
+                        <span v-for="col in visibleColumns" :key="col.col">
+                            <strong>
+                                <a @click="sort(col.col)">
+                                    {{col.name}}
 
-        <DynamicScroller
-            class="scroller"
-            :items="requests"
-            :min-item-size="32"
-            key-field="GUID"
-            ref="scroller"
-        >
-            
-            <template #before>
-                <div class="grid headers">
-                    <span v-for="col in columns" :key="col.col">
-                        <strong>
-                            <a @click="sort(col.col)">
-                                {{col.name}}
-
-                                <template v-if="sortColumn == col.col">
-                                    <v-icon v-if="sortDirection == 'asc'">mdi-chevron-down</v-icon>
-                                    <v-icon v-if="sortDirection == 'desc'">mdi-chevron-up</v-icon>
-                                </template>
-                            </a>
-                        </strong>
-                    </span>
-                    <span class="last_col">
-                        <v-row>
-                            <v-col md="6">
-                                <strong>Flags</strong>
-                            </v-col>
-
-
-                            <v-col md="6" class="text-right">
-                        
-                                <v-tooltip bottom>
-                                    <template v-slot:activator="{ on, attrs }">
-                                        <v-btn 
-                                            @click="scrollToTop"
-                                            icon
-                                            v-bind="attrs"
-                                            v-on="on"
-                                            x-small
-                                        >
-                                            <v-icon>mdi-arrow-up-thin-circle-outline</v-icon>
-                                        </v-btn>
+                                    <template v-if="sortColumn == col.col">
+                                        <v-icon v-if="sortDirection == 'asc'">mdi-chevron-down</v-icon>
+                                        <v-icon v-if="sortDirection == 'desc'">mdi-chevron-up</v-icon>
                                     </template>
-
-                                    <span>Scroll to top</span>
-                                </v-tooltip>
-
-                                <v-tooltip bottom>
-                                    <template v-slot:activator="{ on, attrs }">
-                                        <v-btn 
-                                            @click="scrollToBottom"
-                                            icon
-                                            v-bind="attrs"
-                                            v-on="on"
-                                            x-small
-                                        >
-                                            <v-icon>mdi-arrow-down-thin-circle-outline</v-icon>
-                                        </v-btn>
-                                    </template>
-
-                                    <span>Scroll to bottom</span>
-                                </v-tooltip>
-                            </v-col>
-                        </v-row>
-                    </span>
-                </div>
-                <v-progress-linear indeterminate v-if="loading"></v-progress-linear>
-            </template>
-
-            <template v-slot="{ item, index, active }">
-                <DynamicScrollerItem
-                    :item="item"
-                    :active="active"
-                    :size-dependencies="[
-                        item.URL,
-                    ]"
-                    :data-index="index"
-                >
-                    <div class="grid grid-contents" v-bind:class="{ selected: (selectedRequest.GUID == item.GUID) }" @click="onRowClick(item)">
-                        <span v-bind:class="{'sorted-column': (sortColumn == 'time')}">
-                            {{printDate(item.Time)}}
+                                </a>
+                            </strong>
                         </span>
+                        <span class="last_col"  v-if="selectedColumns.includes(6)">
+                            <v-row>
+                                <v-col md="6">
+                                    <strong>Flags</strong>
+                                </v-col>
 
-                        <span v-bind:class="{'sorted-column': (sortColumn == 'url')}">
-                            <span class="domain">{{printDomainAndPath(item.URL)}}</span>
-                            <span class="path">{{printQuery(item.URL)}}</span>
-                        </span>
 
-                        <span v-bind:class="{'sorted-column': (sortColumn == 'response_size')}">
-                            {{printSize(item.ResponseSize)}}
-                        </span>
-                        
-                        <span v-bind:class="{'sorted-column': (sortColumn == 'response_time')}">
-                            {{printDuration(item.ResponseTime)}}
-                        </span>
+                                <v-col md="6" class="text-right">
+                            
+                                    <v-tooltip bottom>
+                                        <template v-slot:activator="{ on, attrs }">
+                                            <v-btn 
+                                                @click="scrollToTop"
+                                                icon
+                                                v-bind="attrs"
+                                                v-on="on"
+                                                x-small
+                                            >
+                                                <v-icon>mdi-arrow-up-thin-circle-outline</v-icon>
+                                            </v-btn>
+                                        </template>
 
-                        <span v-bind:class="{'sorted-column': (sortColumn == 'verb')}">
-                            {{item.Verb}}
-                        </span>
+                                        <span>Scroll to top</span>
+                                    </v-tooltip>
 
-                        <span v-bind:class="{'sorted-column': (sortColumn == 'response_status_code')}">
-                            {{item.ResponseStatusCode}}
-                        </span>
+                                    <v-tooltip bottom>
+                                        <template v-slot:activator="{ on, attrs }">
+                                            <v-btn 
+                                                @click="scrollToBottom"
+                                                icon
+                                                v-bind="attrs"
+                                                v-on="on"
+                                                x-small
+                                            >
+                                                <v-icon>mdi-arrow-down-thin-circle-outline</v-icon>
+                                            </v-btn>
+                                        </template>
 
-                        <span class="last_col">
-                            <!-- flags -->
-                            <v-icon small v-if="item.Error != ''" class="mr-1">mdi-alert-circle-outline</v-icon>
-                            <v-icon small v-if="item.Notes != ''">mdi-message-outline</v-icon>
+                                        <span>Scroll to bottom</span>
+                                    </v-tooltip>
+                                </v-col>
+                            </v-row>
                         </span>
                     </div>
-                </DynamicScrollerItem>
-            </template>
-        </DynamicScroller>
+                    <v-progress-linear indeterminate v-if="loading"></v-progress-linear>
+                </template>
 
-        <RequestDetails class="request-details" v-bind:request="selectedRequest"></RequestDetails>
-    </v-card>
+                <template v-slot="{ item, index, active }">
+                    <DynamicScrollerItem
+                        :item="item"
+                        :active="active"
+                        :size-dependencies="[
+                            item.URL,
+                        ]"
+                        :data-index="index"
+                    >
+                        <div class="grid grid-contents" v-bind:class="{ selected: (selectedRequest.GUID == item.GUID) }" @click="onRowClick(item)">
+                            <span v-bind:class="{'sorted-column': (sortColumn == 'time')}" v-if="selectedColumns.includes(0)">
+                                {{printDate(item.Time)}}
+                            </span>
 
-    <v-card height="calc(100vh - 50px)" class="pl-10 pr-10 pt-5" elevation="0" tiled v-else>
-        <RequestPlaceholder />
-    </v-card>
+                            <span v-bind:class="{'sorted-column': (sortColumn == 'url')}" v-if="selectedColumns.includes(1)">
+                                <span class="domain">{{printDomainAndPath(item.URL)}}</span>
+                                <span class="path">{{printQuery(item.URL)}}</span>
+                            </span>
+
+                            <span v-bind:class="{'sorted-column': (sortColumn == 'response_size')}" v-if="selectedColumns.includes(2)">
+                                {{printSize(item.ResponseSize)}}
+                            </span>
+                            
+                            <span v-bind:class="{'sorted-column': (sortColumn == 'response_time')}" v-if="selectedColumns.includes(3)">
+                                {{printDuration(item.ResponseTime)}}
+                            </span>
+
+                            <span v-bind:class="{'sorted-column': (sortColumn == 'verb')}" v-if="selectedColumns.includes(4)">
+                                {{item.Verb}}
+                            </span>
+
+                            <span v-bind:class="{'sorted-column': (sortColumn == 'response_status_code')}" v-if="selectedColumns.includes(5)">
+                                {{item.ResponseStatusCode}}
+                            </span>
+
+                            <span class="last_col" v-if="selectedColumns.includes(6)">
+                                <!-- flags -->
+                                <v-icon small v-if="item.Error != ''" class="mr-1">mdi-alert-circle-outline</v-icon>
+                                <v-icon small v-if="item.Notes != ''">mdi-message-outline</v-icon>
+                            </span>
+                        </div>
+                    </DynamicScrollerItem>
+                </template>
+            </DynamicScroller>
+
+            <RequestDetails class="request-details" v-bind:request="selectedRequest"></RequestDetails>
+        </v-card>
+
+        <v-card height="calc(100vh - 50px)" class="pl-10 pr-10 pt-5" elevation="0" tiled v-else>
+            <RequestPlaceholder />
+        </v-card>
+
+        <v-menu v-model="showColumnSelectionMenu" :position-x="columnSelectionX" :position-y="columnSelectionY" :close-on-content-click="false" absolute offset-y>
+            <v-list>
+                <v-list-item-group multiple v-model="selectedColumns">
+                    <v-list-item v-for="(col, index) in columns" :key="index">
+                        <template v-slot:default="{ active }">
+                            <v-list-item-action>
+                                <v-checkbox :input-value="active"></v-checkbox>
+                            </v-list-item-action>
+
+                            <v-list-item-content>
+                                <v-list-item-title>{{col.name}}</v-list-item-title>
+                            </v-list-item-content>
+                        </template>
+                    </v-list-item>
+                </v-list-item-group>
+            </v-list>
+        </v-menu>
+
+    </div>
 </template>
 
 <script>
@@ -156,13 +177,16 @@
     data () {
       return {
         columns: [
-            {name: 'Time', col: 'time'},
-            {name: 'URL', col: 'url'},
-            {name: 'Size', col: 'response_size'},
-            {name: 'Duration', col: 'response_time'},
-            {name: 'Verb', col: 'verb'},
-            {name: 'Status', col: 'response_status_code'},
-        ],  
+            {name: 'Time', col: 'time', space: 1},
+            {name: 'URL', col: 'url', space: 5},
+            {name: 'Size', col: 'response_size', space: 1},
+            {name: 'Duration', col: 'response_time', space: 1},
+            {name: 'Verb', col: 'verb', space: 1},
+            {name: 'Status', col: 'response_status_code', space: 1},
+            {name: 'Flags', col: 'flags', space: 2},
+        ],
+        columnSelectionX:0,
+        columnSelectionY:0,
         connection: null,
         closingList: false,
         excludeResources: true,
@@ -171,13 +195,37 @@
         previousSearch: '',
         requests: [],
         search: '',
+        selectedColumns: [0,1,2,3,4,5,6],
         selectedRequest: {},
+        showColumnSelectionMenu: false,
         sortColumn: 'time',
         sortDirection: 'asc',
       }
     },
 
     computed: {
+        cssVars: function() {
+            let columnWidths = ""
+            this.columns.forEach((col, idx) => {
+                if(this.selectedColumns.includes(idx)) {
+                    columnWidths += " " + col.space + "fr";
+                }
+            })
+
+            return {
+                '--grid-column-widths': columnWidths
+            }
+        },
+        visibleColumns: function() {
+            let visCols = []
+            this.columns.forEach((col, idx) => {
+                // 6 is flags, which is handled separately
+                if(this.selectedColumns.includes(idx) && idx != 6) {
+                    visCols.push(col)
+                }
+            })
+            return visCols
+        }
     },
 
     created: function() {
@@ -466,10 +514,26 @@
             let scroller = document.getElementsByClassName('scroller')[0]
             scroller.scrollTop = 0;
         },
+
+
+        onTableHeaderRightClick (e) {
+            e.preventDefault()
+            this.showColumnSelectionMenu = false
+            this.columnSelectionX = e.clientX
+            this.columnSelectionY = e.clientY
+            this.$nextTick(() => {
+                this.showColumnSelectionMenu = true
+            })
+        },
     },
 
     mounted: function() {
         this.loadRequests()
+
+        if(localStorage.selectedColumns) {
+            this.selectedColumns = localStorage.selectedColumns.split(',')
+            this.selectedColumns = this.selectedColumns.map( s => parseInt(s) )
+        }
     },
 
     props: {
@@ -483,6 +547,9 @@
         scanID: function() {
             this.requests = []
             this.loadRequests()
+        },
+        selectedColumns: function(newSelectedColumns) {
+            localStorage.selectedColumns = newSelectedColumns
         }
     }
   }
@@ -535,7 +602,7 @@
 
     .grid {
         display: grid;
-        grid-template-columns: 1fr 5fr 1fr 1fr 1fr 1fr 2fr;
+        grid-template-columns: var(--grid-column-widths);
         height: 32%;
     }
 
