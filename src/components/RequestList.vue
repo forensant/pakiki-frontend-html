@@ -1,8 +1,8 @@
 <template>
     <div :style="cssVars">
-        <v-card height="calc(100vh - 50px)" class="pl-10 pr-10 pt-5" elevation="0" tiled v-if="loading || requests.length != 0 || scanID != undefined || search != ''">
+        <v-card height="calc(100vh - 50px)" class="pl-10 pr-10 pt-5" elevation="0" tiled v-if="loading || requests.length != 0 || scanID != undefined || search != '' || protocol != ''">
             <v-row>
-                <v-col md="6">
+                <v-col md="4">
                 </v-col>
                 <v-col md="4">
                     <v-text-field
@@ -13,14 +13,24 @@
                         @change="onSearch"
                     ></v-text-field>
                 </v-col>
+
+                <v-col md="2">
+                    <v-autocomplete
+                        v-model="protocol"
+                        label="Protocol"
+                        :items="protocols"
+                        @change="onSearch"
+                    ></v-autocomplete>
+                </v-col>
                     
-                    <v-col md="2">
+                <v-col md="2">
                     <v-checkbox
                         v-model="excludeResources"
                         label="Exclude Resources"
                         class=""
                     ></v-checkbox>
                 </v-col>
+
             </v-row>
 
             <DynamicScroller
@@ -45,7 +55,7 @@
                                 </a>
                             </strong>
                         </span>
-                        <span class="last_col"  v-if="selectedColumns.includes(6)">
+                        <span class="last_col"  v-if="selectedColumns.includes(7)">
                             <v-row>
                                 <v-col md="6">
                                     <strong>Flags</strong>
@@ -106,28 +116,32 @@
                                 {{printDate(item.Time)}}
                             </span>
 
-                            <span v-bind:class="{'sorted-column': (sortColumn == 'url')}" v-if="selectedColumns.includes(1)">
+                            <span v-bind:class="{'sorted-column': (sortColumn == 'protocol')}" v-if="selectedColumns.includes(1)">
+                                {{item.Protocol}}
+                            </span>
+
+                            <span v-bind:class="{'sorted-column': (sortColumn == 'url')}" v-if="selectedColumns.includes(2)">
                                 <span class="domain">{{printDomainAndPath(item.URL)}}</span>
                                 <span class="path">{{printQuery(item.URL)}}</span>
                             </span>
 
-                            <span v-bind:class="{'sorted-column': (sortColumn == 'response_size')}" v-if="selectedColumns.includes(2)">
+                            <span v-bind:class="{'sorted-column': (sortColumn == 'response_size')}" v-if="selectedColumns.includes(3)">
                                 {{printSize(item.ResponseSize)}}
                             </span>
                             
-                            <span v-bind:class="{'sorted-column': (sortColumn == 'response_time')}" v-if="selectedColumns.includes(3)">
+                            <span v-bind:class="{'sorted-column': (sortColumn == 'response_time')}" v-if="selectedColumns.includes(4)">
                                 {{printDuration(item.ResponseTime)}}
                             </span>
 
-                            <span v-bind:class="{'sorted-column': (sortColumn == 'verb')}" v-if="selectedColumns.includes(4)">
+                            <span v-bind:class="{'sorted-column': (sortColumn == 'verb')}" v-if="selectedColumns.includes(5)">
                                 {{item.Verb}}
                             </span>
 
-                            <span v-bind:class="{'sorted-column': (sortColumn == 'response_status_code')}" v-if="selectedColumns.includes(5)">
-                                {{item.ResponseStatusCode}}
+                            <span v-bind:class="{'sorted-column': (sortColumn == 'response_status_code')}" v-if="selectedColumns.includes(6)">
+                                {{item.ResponseStatusCode == 0 ? '' : item.ResponseStatusCode}}
                             </span>
 
-                            <span class="last_col" v-if="selectedColumns.includes(6)">
+                            <span class="last_col" v-if="selectedColumns.includes(7)">
                                 <!-- flags -->
                                 <v-icon small v-if="item.Error != ''" class="mr-1">mdi-alert-circle-outline</v-icon>
                                 <v-icon small v-if="item.Notes != ''">mdi-message-outline</v-icon>
@@ -168,6 +182,7 @@
 <script>
   import RequestDetails from './RequestDetails';
   import RequestPlaceholder from './Placeholders/Requests'
+  import {PrintDate} from '../mixins/common.js'
 
   export default {
     components: {
@@ -178,6 +193,7 @@
       return {
         columns: [
             {name: 'Time', col: 'time', space: 1},
+            {name: 'Protocol', col: 'protocol', space: 1},
             {name: 'URL', col: 'url', space: 5},
             {name: 'Size', col: 'response_size', space: 1},
             {name: 'Duration', col: 'response_time', space: 1},
@@ -193,9 +209,11 @@
         initialLoad: true,
         loading: true,
         previousSearch: '',
+        protocol: '',
+        protocols: ['All', 'HTTP', 'Websockets', 'Out of Band'],
         requests: [],
         search: '',
-        selectedColumns: [0,1,2,3,4,5,6],
+        selectedColumns: [0,2,3,4,5,6,7],
         selectedRequest: {},
         showColumnSelectionMenu: false,
         sortColumn: 'time',
@@ -219,8 +237,8 @@
         visibleColumns: function() {
             let visCols = []
             this.columns.forEach((col, idx) => {
-                // 6 is flags, which is handled separately
-                if(this.selectedColumns.includes(idx) && idx != 6) {
+                // 7 is flags, which is handled separately
+                if(this.selectedColumns.includes(idx) && idx != 7) {
                     visCols.push(col)
                 }
             })
@@ -297,10 +315,13 @@
             this.loading = true
             vm.requests = []
 
+            let protocol = this.protocolStr()
+            
             this.$http.get('/project/requests', {
                 params: {
                     scanid: vm.scanID,
                     filter: vm.search,
+                    protocol: protocol,
                     exclude_resources: vm.excludeResources,
                     sort_col: vm.sortColumn,
                     sort_dir: vm.sortDirection,
@@ -315,8 +336,11 @@
                 }
             })
         },
+        onRowClick: function(item) {
+            this.selectedRequest = item
+        },
         onSearch: function() {
-            let searchQuery = this.search + this.excludeResources
+            let searchQuery = this.search + this.excludeResources + this.protocol
             let prevSearch = this.previousSearch
 
             if(prevSearch.valueOf() !== searchQuery.valueOf()) {
@@ -325,136 +349,63 @@
                 this.startWebsocket()
             }
         },
-        tableFieldsDiffer: function(req1, req2) {
-            return req1.time != req2.time || 
-                req1.url != req2.url ||
-                req1.response_size != req2.response_size || 
-                req1.response_time != req2.response_time || 
-                req1.verb != req2.verb || 
-                req1.status != req2.status
+        onTableHeaderRightClick (e) {
+            e.preventDefault()
+            this.showColumnSelectionMenu = false
+            this.columnSelectionX = e.clientX
+            this.columnSelectionY = e.clientY
+            this.$nextTick(() => {
+                this.showColumnSelectionMenu = true
+            })
         },
-        sort: function(col) {
-            if(this.sortColumn == col) {
-                if(this.sortDirection == "asc") {
-                    this.sortDirection = "desc"
-                }
-                else {
-                    this.sortDirection = "asc"
-                }
-            }
-            else {
-                this.sortColumn = col;
-            }
-
-            if(this.sortDirection == "") {
-                this.sortDirection = "asc"
-            }
-
-            this.loadRequests()
-        },
-        startWebsocket: function() {
-            if (!window["WebSocket"]) {
+        onWebsocketConnectionClose: function(e) {
+            let vm = this
+            if(vm.closingList) {
                 return
             }
+            console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
+            setTimeout(function() {
+                vm.startWebsocket();
+            }, 1000);
+        },
+        onWebsocketMessage: function(evt) {
             let vm = this
+            var messages = evt.data.split('\n');
+            for (var i = 0; i < messages.length; i++) {
+                try {
+                    var jsonObj = JSON.parse(messages[i])
 
-            if(this.connection != null) {
-                this.connection.close(1001) // going away
-            }
-
-            let url = this.$websocketUrl
-            let filter = ""
-
-            if(this.excludeResources) {
-                filter = "exclude_resources:true "
-            }
-            if(this.search != "") {
-                filter += encodeURIComponent(this.search)
-            }
-
-            if(filter != "") {
-                url += "?filter=" + filter
-            }
-            
-            this.connection = new WebSocket(url);
-
-            this.connection.onclose = function(e) {
-                if(vm.closingList) {
-                    return
-                }
-                console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
-                setTimeout(function() {
-                    vm.startWebsocket();
-                }, 1000);
-            };
-            
-            this.connection.onerror = function() {
-                if(this.connection != null) {
-                    this.connection.close(1002); // protocol error
-                }
-            };
-
-            this.connection.onmessage = function (evt) {
-                var messages = evt.data.split('\n');
-                for (var i = 0; i < messages.length; i++) {
-                    try {
-                        var jsonObj = JSON.parse(messages[i])
-                        
-                        if(vm.scanID != undefined && vm.scanID != jsonObj.ScanID) {
-                            continue
-                        }
-
-                        if(vm.scanID == undefined && jsonObj.ScanID != "") {
-                            continue
-                        }
-
-                        if(jsonObj.ObjectType == 'HTTP Request') {
-                            let found = false
-                            vm.requests.forEach(function(request, idx) {
-                                if(request.GUID == jsonObj.GUID) {
-                                    if(vm.tableFieldsDiffer(request, jsonObj)) {
-                                        vm.requests.splice(idx, 1)
-                                    }
-                                    else {
-                                        found = true
-                                        vm.requests.splice(idx, 1, jsonObj)
-                                    }
-                                }
-                            })
-
-                            if(!found) {
-                                let idx = vm.getInsertIndex(jsonObj)
-                                vm.requests.splice(idx, 0, jsonObj)
-                                vm.scrollToBottomIfRequired()
+                    let found = false
+                    vm.requests.forEach(function(request, idx) {
+                        if(request.GUID == jsonObj.GUID) {
+                            if(vm.tableFieldsDiffer(request, jsonObj)) {
+                                vm.requests.splice(idx, 1)
+                            }
+                            else {
+                                found = true
+                                vm.requests.splice(idx, 1, jsonObj)
                             }
                         }
+                    })
+
+                    if(vm.selectedRequest.GUID == jsonObj.GUID) {
+                        // forces a reload of the request display if there's an update
+                        vm.selectedRequest = jsonObj
                     }
-                    catch (e) {
-                        console.log("Error processing message: " + e)
+
+                    if(!found) {
+                        let idx = vm.getInsertIndex(jsonObj)
+                        vm.requests.splice(idx, 0, jsonObj)
+                        vm.scrollToBottomIfRequired()
                     }
                 }
-            };
-        },
-        onRowClick: function(item) {
-            this.selectedRequest = item
-        },
-        printDate: function(dateInEpoch) {
-            let d = new Date(dateInEpoch * 1000);
-            const today = new Date()
-
-            let isToday = (d.getDate() == today.getDate() && d.getMonth() == today.getMonth() && d.getFullYear() == today.getFullYear())
-
-            if(isToday) {
-                return d.toLocaleTimeString(undefined, {
-                    timeStyle: "short"
-                })
+                catch (e) {
+                    console.log("Error processing message: " + e)
+                }
             }
-            else {
-                return d.toLocaleString(undefined, {
-                    dateStyle: "short",
-                    timeStyle: "short",
-                })
-            }
+        },
+        printDate: function(date) {
+            return PrintDate(date)
         },
         printDomainAndPath: function(url) {
             let pathStart = url.indexOf("?", 8)
@@ -464,6 +415,10 @@
             return url.substring(0, pathStart)
         },
         printDuration: function(duration) {
+            if(duration == 0) {
+                return ""
+            }
+
             if(duration > 5000) {
                 return (duration/1000) + "s"
             }
@@ -497,6 +452,18 @@
                 return bytes.toFixed(2) + " GB"
             }
         },
+        protocolStr: function() {
+            let protocol = this.protocol
+            if (protocol == "All") {
+                protocol = ""
+            } else if (protocol == "HTTP") {
+                protocol = "HTTP/1.1"
+            } else if (protocol == "Websockets") {
+                protocol = "Websocket"
+            }
+
+            return protocol
+        },
         scrollToBottom: function() {
             this.$refs.scroller.scrollToBottom()
         },
@@ -514,16 +481,89 @@
             let scroller = document.getElementsByClassName('scroller')[0]
             scroller.scrollTop = 0;
         },
+        sort: function(col) {
+            if(this.sortColumn == col) {
+                if(this.sortDirection == "asc") {
+                    this.sortDirection = "desc"
+                }
+                else {
+                    this.sortDirection = "asc"
+                }
+            }
+            else {
+                this.sortColumn = col;
+            }
 
+            if(this.sortDirection == "") {
+                this.sortDirection = "asc"
+            }
 
-        onTableHeaderRightClick (e) {
-            e.preventDefault()
-            this.showColumnSelectionMenu = false
-            this.columnSelectionX = e.clientX
-            this.columnSelectionY = e.clientY
-            this.$nextTick(() => {
-                this.showColumnSelectionMenu = true
-            })
+            this.loadRequests()
+        },
+        startWebsocket: function() {
+            if (!window["WebSocket"]) {
+                return
+            }
+            let vm = this
+
+            if(this.connection != null) {
+                this.connection.removeEventListener("close", this.onWebsocketConnectionClose)
+                this.connection.close(1000)
+            }
+
+            let url = this.$websocketUrl
+
+            let objectFieldFilter = {
+                ObjectType: 'HTTP Request'
+            }
+            
+            if(this.protocolStr() != '') {
+                objectFieldFilter['Protocol'] = this.protocolStr()
+            }
+            
+            if(this.scanID == undefined) {
+                objectFieldFilter['ScanID'] = ''
+            }
+            else {
+                objectFieldFilter['ScanID'] = this.scanID
+            }
+
+            url += "?objectfieldfilter=" + encodeURIComponent(JSON.stringify(objectFieldFilter))
+
+            let filter = ''
+
+            if(this.excludeResources) {
+                filter = "exclude_resources:true "
+            }
+            if(this.search != "") {
+                filter += encodeURIComponent(this.search)
+            }
+
+            if(filter != "") {
+                url += "&filter=" + filter
+            }
+
+            this.connection = new WebSocket(url);
+
+            this.connection.addEventListener("close", this.onWebsocketConnectionClose);
+            
+            this.connection.onerror = function() {
+                if(this.connection != null) {
+                    this.connection.close(1002); // protocol error
+                }
+            };
+
+            this.connection.onmessage = function (evt) {
+                vm.onWebsocketMessage(evt)
+            };
+        },
+        tableFieldsDiffer: function(req1, req2) {
+            return req1.time != req2.time || 
+                req1.url != req2.url ||
+                req1.response_size != req2.response_size || 
+                req1.response_time != req2.response_time || 
+                req1.verb != req2.verb || 
+                req1.status != req2.status
         },
     },
 
@@ -557,16 +597,6 @@
 </script>
 
 <style>
-    table {
-        table-layout: fixed
-    }
-
-    td {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
     .path {
         color: rgb(125, 125, 125)
     }

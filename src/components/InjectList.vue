@@ -154,7 +154,12 @@
 
         destroyed: function() {
             this.closingList = true
-            this.connection.close(1001) // going away
+
+            if(this.connection != null) {
+                this.connection.removeEventListener("close", this.onWebsocketConnectionClose)
+                this.connection.close(1000);
+            }
+            
             this.connection = null
         },
 
@@ -211,6 +216,16 @@
 
                 return found
             },
+            onWebsocketConnectionClose: function(e) {
+                let vm = this
+                if(vm.closingList) {
+                    return
+                }
+                console.log('Inject socket is closed. Reconnect will be attempted in 1 second.', e.reason);
+                setTimeout(function() {
+                    vm.startWebsocket();
+                }, 1000);
+            },
             removeFromArray: function(arr, injectObj) {
                 arr.forEach(function(scan ,idx) {
                     if(scan.GUID == injectObj.GUID) {
@@ -226,21 +241,16 @@
                 let vm = this
 
                 if(this.connection != null) {
-                    this.connection.close(1001); // going away
+                    this.connection.removeEventListener("close", this.onWebsocketConnectionClose)
+                    this.connection.close(1000);
                 }
-                
-                this.connection = new WebSocket(this.$websocketUrl);
 
-                this.connection.onclose = function(e) {
-                    if(vm.closingList) {
-                        return
-                    }
-                    console.log('Inject socket is closed. Reconnect will be attempted in 1 second.', e.reason);
-                    setTimeout(function() {
-                        vm.startWebsocket();
-                    }, 1000);
-                };
-                
+                let url = this.$websocketUrl
+                url += "?objectfieldfilter=" + encodeURIComponent(JSON.stringify( {ObjectType: 'Inject Operation'} ))
+
+                this.connection = new WebSocket(url);
+                this.connection.addEventListener("close", this.onWebsocketConnectionClose);
+
                 this.connection.onerror = function() {
                     if(this.connection != null) {
                         this.connection.close(1002); // protocol error
@@ -252,9 +262,7 @@
                     for (var i = 0; i < messages.length; i++) {
                         try {
                             var jsonObj = JSON.parse(messages[i])
-                            if(jsonObj.ObjectType == 'Inject Operation') {
-                                vm.addInjectObjToArray(jsonObj)
-                            }
+                            vm.addInjectObjToArray(jsonObj)
                         }
                         catch (e) {
                             console.log("Error processing message: " + e)

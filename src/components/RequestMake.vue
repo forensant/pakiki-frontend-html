@@ -12,6 +12,21 @@
             <v-col md="6">
                 <v-text-field v-model="hostname" label="Hostname" />
             </v-col>
+            <v-col md="4" class="text-right">
+                <v-tooltip bottom>
+                    <template v-slot:activator="{ on, attrs }">
+                        <v-btn
+                            v-bind="attrs"
+                            v-on="on"
+                            class="mt-3"
+                            @click="insertOOBClicked"
+                        >
+                        Insert OOB Domain
+                        </v-btn>
+                    </template>
+                    <span>Insert an out of band interaction domain</span>
+                </v-tooltip>
+            </v-col>
         </v-row>
 
         <v-row>
@@ -19,7 +34,8 @@
                 <v-textarea
                     v-model="request"
                     outlined
-                    label="Request">
+                    label="Request"
+                    id="textarea_request">
                 </v-textarea>
             </v-col>
         </v-row>
@@ -55,6 +71,7 @@
 
 <script>
   import RequestDetails from './RequestDetails';
+  import {insertOOBDomain} from '../mixins/common.js'
 
   export default {
     name: 'RequestMake',
@@ -75,6 +92,13 @@
     },
 
     methods: {
+        insertOOBClicked: function() {
+            var requestControl = document.getElementById("textarea_request");
+            insertOOBDomain(this.$http,
+                requestControl,
+                (r => this.request = r)
+            )
+        },
         populateRequestData: function() {
             let vm = this
             if('request_id' in this.$route.params) {

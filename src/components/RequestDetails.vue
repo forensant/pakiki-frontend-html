@@ -1,6 +1,6 @@
 <template>
     <div class="border">
-        <v-menu offset-y>
+        <v-menu offset-y v-if="request != null && request.Protocol == 'HTTP/1.1'">
             <template v-slot:activator="{ on, attrs }">
                 <v-btn
                     color="green"
@@ -27,7 +27,7 @@
                 <td class="header">URL:</td>
                 <td class="table-details">{{request.URL}}</td>
             </tr>
-            <tr>
+            <tr v-if="request.Protocol == 'HTTP/1.1'">
                 <td class="header">Content Type:</td>
                 <td class="table-details">{{request.ResponseContentType}}</td>
             </tr>
@@ -49,6 +49,12 @@
                     </v-row>
                 </td>
             </tr>
+
+            <tr v-for="(value, key) in displayDetails" v-bind:key="key">
+                <td class="header">{{key}}:</td>
+                <td class="table-details">{{value}}</td>
+            </tr>
+            
             <tr class="pt-2" v-if="requestData != ''">
                 <td class="header">Request:</td>
                 <td class="table-details"><pre>{{requestData}}</pre></td>
@@ -65,6 +71,40 @@
                 <td class="header">Modified Response:</td>
                 <td class="table-deatils"><pre>{{modifiedResponseData}}</pre></td>
             </tr>
+
+            <tr class="pt-2" v-if="request.Protocol == 'Websocket'">
+                <td class="header">Messages:</td>
+                <td class="table-details">
+                    <table class="tbl_websocket_messages">
+                        <tr>
+                            <th class="tbl_messages_header">Time</th>
+                            <th class="tbl_messages_header">Direction</th>
+                            <th class="tbl_messages_header">Opcode</th>
+                            <th class="tbl_messages_header">Data</th>
+                        </tr>
+
+                        <tr v-for="packet in dataPackets" :key="packet.guid">
+                            <td class="no-wrap">{{printDate(packet.Time)}}</td>
+                            <td class="no-wrap">{{packet.Direction}}</td>
+                            <td class="no-wrap">{{JSON.parse(packet.DisplayData).opcode}}</td>
+                            <td>
+                                <!-- TODO: Some hex control -->
+                                <div v-if="'ModifiedData' in packet">
+                                    <strong>Original:</strong><br>
+                                    {{base64Decode(packet.Data)}}<br><br>
+                                    <strong>Modified:</strong><br>
+                                    {{base64Decode(packet.ModifiedData)}}
+                                </div>
+                                <div v-else>
+                                    {{base64Decode(packet.Data)}}
+                                </div>
+                            </td> 
+                        </tr>
+
+                    </table>
+                </td>
+            </tr>
+            
         </table>
 
         <v-progress-linear indeterminate v-if="loading" class="mt-5"></v-progress-linear>
@@ -73,6 +113,8 @@
 </template>
 
 <script>
+  import {PrintDate} from '../mixins/common.js'
+
   export default {
     name: 'RequestDetails',
 
@@ -85,6 +127,8 @@
     ],
 
     data: () => ({
+        dataPackets: [],
+        displayDetails: {},
         loading: true,
         modifiedRequestData: '',
         modifiedResponseData: '',
@@ -116,6 +160,9 @@
     },
 
     methods: {
+        base64Decode(str) {
+            return window.atob(str)
+        },
         populateRequestResponse() {
             let vm = this
 
@@ -126,13 +173,66 @@
 
             this.$http.get('/project/requestresponse?guid=' + this.request.GUID)
                 .then(function (response) {
+                    vm.displayDetails = {}
                     vm.requestData  = window.atob(response.data.Request)
                     vm.responseData = window.atob(response.data.Response)
                     vm.modifiedRequestData  = window.atob(response.data.ModifiedRequest)
                     vm.modifiedResponseData = window.atob(response.data.ModifiedResponse)
+                    vm.dataPackets = vm.processDataPackets(response.data.DataPackets)
                     vm.loading = false
                 })
-        }
+        },
+        processDataPackets(dataPackets) {
+            if(dataPackets == null) {
+                return null
+            }
+            let newDataPackets = []
+            dataPackets.forEach(packet => {
+                if(this.request.Protocol == 'Out of Band') {
+                    if(packet.DisplayData != "") {
+                        this.displayDetails = JSON.parse(packet.DisplayData)
+
+                        for(const [k, v] of Object.entries(this.displayDetails)) {
+                            if(v == undefined || v == '') {
+                                delete this.displayDetails[k]
+                            }
+                        }
+                    }
+
+                    if(packet.Direction == "Request") {
+                        this.requestData  = window.atob(packet.Data)
+                    }
+                    else {
+                        this.responseData  = window.atob(packet.Data)
+                    }
+                }
+
+                let found = false
+
+                for(var i = 0; i < newDataPackets.length; i++) {    
+                    if(newDataPackets[i].GUID == packet.GUID) {
+                        if(newDataPackets[i].Modified) {
+                            newDataPackets[i]['ModifiedData'] = newDataPackets[i].Data
+                            newDataPackets[i].Data = packet.Data
+                        } else if(packet.Modified) {
+                            newDataPackets[i]['ModifiedData'] = packet.Data
+                        }
+
+                        found = true
+                        break
+                    }
+                }
+
+                if(!found) {
+                    newDataPackets.push(packet)
+                }
+            });
+
+            return newDataPackets
+        },
+        printDate: function(dateInEpoch) {
+            return PrintDate(dateInEpoch)
+        },
     }
   }
 </script>
@@ -168,4 +268,59 @@
       border: 1px solid rgba(0,0,0,0.2);
       padding: 10px;
   }
+
+  .tbl_websocket_messages th {
+      text-align: left;
+      font-weight: bold;
+      padding-right: 15px;
+      white-space: nowrap;
+  }
+
+  .tbl_websocket_messages td {
+      white-space: normal;
+      overflow-wrap: break-word;
+      word-break: break-word;
+  }
+
+  .tbl_websocket_messages .no-wrap {
+      white-space:pre;
+      overflow-wrap: normal;
+      word-break:keep-all;
+  }
+
+  .tbl_websocket_messages {
+      border-collapse: collapse;
+  }
+
+  .tbl_websocket_messages td {
+      padding: 3px 5px;
+  }
+
+  .tbl_websocket_messages th {
+      padding: 3px 5px;
+  }
+
+  .theme--dark .tbl_websocket_messages {
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .theme--dark .tbl_websocket_messages th {
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .theme--dark .tbl_websocket_messages td {
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .theme--light  .tbl_websocket_messages {
+        border: 1px solid rgba(0,0,0,0.2);
+    }
+
+    .theme--light  .tbl_websocket_messages th {
+        border: 1px solid rgba(0,0,0,0.2);
+    }
+
+    .theme--light  .tbl_websocket_messages td {
+        border: 1px solid rgba(0,0,0,0.2);
+    }
 </style>

@@ -54,7 +54,21 @@
                                 <v-text-field v-model="hostname" label="Hostname" />
                             </v-col>
                             <v-col md="4">
-                                <v-btn class="mt-3" @click="insertSeparatorIntoRequest">Insert Separator</v-btn>
+                                <v-btn class="mt-3 mr-3" @click="insertSeparatorIntoRequest">Insert Separator</v-btn>
+
+                                <v-tooltip bottom>
+                                    <template v-slot:activator="{ on, attrs }">
+                                        <v-btn
+                                            v-bind="attrs"
+                                            v-on="on"
+                                            class="mt-3"
+                                            @click="insertOOBClicked"
+                                        >
+                                        Insert OOB
+                                        </v-btn>
+                                    </template>
+                                    <span>Insert an out of band interaction domain</span>
+                                </v-tooltip>
                             </v-col>
                         </v-row>
 
@@ -190,6 +204,8 @@
 </template>
 
 <script>
+  import {insertOOBDomain} from '../mixins/common.js'
+
   export default {
     name: 'RequestMake',
 
@@ -317,6 +333,13 @@
                     requestControl.focus();
                 }
             }
+        },
+        insertOOBClicked: function() {
+            var requestControl = document.getElementById("textarea_request");
+            insertOOBDomain(this.$http,
+                requestControl,
+                (r => this.request = r)
+            )
         },
         requestToInjectFormat: function() {
             var components = this.request.split(/[»«]/)
