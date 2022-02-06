@@ -91,7 +91,7 @@
 
             <v-row>
                 <v-col class="thin-border-top">
-                    <RequestList :scanID="scan.GUID"></RequestList>
+                    <RequestList :scanID="scan.GUID" :showPayloads="true"></RequestList>
                 </v-col>
             </v-row>
         </v-card>

@@ -55,7 +55,7 @@
                                 </a>
                             </strong>
                         </span>
-                        <span class="last_col"  v-if="selectedColumns.includes(7)">
+                        <span class="last_col"  v-if="selectedColumns.includes('flags')">
                             <v-row>
                                 <v-col md="6">
                                     <strong>Flags</strong>
@@ -112,37 +112,40 @@
                         :data-index="index"
                     >
                         <div class="grid grid-contents" v-bind:class="{ selected: (selectedRequest.GUID == item.GUID) }" @click="onRowClick(item)">
-                            <span v-bind:class="{'sorted-column': (sortColumn == 'time')}" v-if="selectedColumns.includes(0)">
+                            <span v-bind:class="{'sorted-column': (sortColumn == 'time')}" v-if="selectedColumns.includes('time')">
                                 {{printDate(item.Time)}}
                             </span>
 
-                            <span v-bind:class="{'sorted-column': (sortColumn == 'protocol')}" v-if="selectedColumns.includes(1)">
+                            <span v-bind:class="{'sorted-column': (sortColumn == 'protocol')}" v-if="selectedColumns.includes('protocol')">
                                 {{item.Protocol}}
                             </span>
 
-                            <span v-bind:class="{'sorted-column': (sortColumn == 'url')}" v-if="selectedColumns.includes(2)">
+                            <span v-bind:class="{'sorted-column': (sortColumn == 'url')}" v-if="selectedColumns.includes('url')">
                                 <span class="domain">{{printDomainAndPath(item.URL)}}</span>
                                 <span class="path">{{printQuery(item.URL)}}</span>
                             </span>
 
-                            <span v-bind:class="{'sorted-column': (sortColumn == 'response_size')}" v-if="selectedColumns.includes(3)">
+                            <span v-bind:class="{'sorted-column': (sortColumn == 'response_size')}" v-if="selectedColumns.includes('response_size')">
                                 {{printSize(item.ResponseSize)}}
                             </span>
                             
-                            <span v-bind:class="{'sorted-column': (sortColumn == 'response_time')}" v-if="selectedColumns.includes(4)">
+                            <span v-bind:class="{'sorted-column': (sortColumn == 'response_time')}" v-if="selectedColumns.includes('response_time')">
                                 {{printDuration(item.ResponseTime)}}
                             </span>
 
-                            <span v-bind:class="{'sorted-column': (sortColumn == 'verb')}" v-if="selectedColumns.includes(5)">
+                            <span v-bind:class="{'sorted-column': (sortColumn == 'verb')}" v-if="selectedColumns.includes('verb')">
                                 {{item.Verb}}
                             </span>
 
-                            <span v-bind:class="{'sorted-column': (sortColumn == 'response_status_code')}" v-if="selectedColumns.includes(6)">
+                            <span v-bind:class="{'sorted-column': (sortColumn == 'response_status_code')}" v-if="selectedColumns.includes('response_status_code')">
                                 {{item.ResponseStatusCode == 0 ? '' : item.ResponseStatusCode}}
                             </span>
 
-                            <span class="last_col" v-if="selectedColumns.includes(7)">
-                                <!-- flags -->
+                            <span v-bind:class="{'sorted-column': (sortColumn == 'payloads')}" v-if="showPayloads && selectedColumns.includes('payloads')">
+                                {{printPayloads(item.Payloads)}}
+                            </span>
+
+                            <span class="last_col" v-if="selectedColumns.includes('flags')">
                                 <v-icon small v-if="item.Error != ''" class="mr-1">mdi-alert-circle-outline</v-icon>
                                 <v-icon small v-if="item.Notes != ''">mdi-message-outline</v-icon>
                             </span>
@@ -161,7 +164,7 @@
         <v-menu v-model="showColumnSelectionMenu" :position-x="columnSelectionX" :position-y="columnSelectionY" :close-on-content-click="false" absolute offset-y>
             <v-list>
                 <v-list-item-group multiple v-model="selectedColumns">
-                    <v-list-item v-for="(col, index) in columns" :key="index">
+                    <v-list-item v-for="(col) in availableColumns" :key="col.col" :value="col.col">
                         <template v-slot:default="{ active }">
                             <v-list-item-action>
                                 <v-checkbox :input-value="active"></v-checkbox>
@@ -199,6 +202,7 @@
             {name: 'Duration', col: 'response_time', space: 1},
             {name: 'Verb', col: 'verb', space: 1},
             {name: 'Status', col: 'response_status_code', space: 1},
+            {name: 'Payloads', col: 'payloads', space: 1},
             {name: 'Flags', col: 'flags', space: 2},
         ],
         columnSelectionX:0,
@@ -213,7 +217,7 @@
         protocols: ['All', 'HTTP', 'Websockets', 'Out of Band'],
         requests: [],
         search: '',
-        selectedColumns: [0,2,3,4,5,6,7],
+        selectedColumns: ['time', 'url', 'response_size', 'response_time', 'verb', 'response_status_code', 'payloads', 'flags'],
         selectedRequest: {},
         showColumnSelectionMenu: false,
         sortColumn: 'time',
@@ -222,10 +226,19 @@
     },
 
     computed: {
+        availableColumns: function() {
+            let availableCols = []
+            this.columns.forEach((col) => {
+                if(col.name != 'Payloads' || this.showPayloads) {
+                    availableCols.push(col)
+                }
+            })
+            return availableCols
+        },
         cssVars: function() {
             let columnWidths = ""
-            this.columns.forEach((col, idx) => {
-                if(this.selectedColumns.includes(idx)) {
+            this.availableColumns.forEach((col) => {
+                if(this.selectedColumns.includes(col.col)) {
                     columnWidths += " " + col.space + "fr";
                 }
             })
@@ -236,9 +249,9 @@
         },
         visibleColumns: function() {
             let visCols = []
-            this.columns.forEach((col, idx) => {
-                // 7 is flags, which is handled separately
-                if(this.selectedColumns.includes(idx) && idx != 7) {
+            this.availableColumns.forEach((col) => {
+                // flags are a special case and handled separately
+                if(this.selectedColumns.includes(col.col) && col.col != 'flags') {
                     visCols.push(col)
                 }
             })
@@ -425,6 +438,22 @@
             
             return duration + "ms"
         },
+        printPayloads: function(payloads) {
+            if(payloads == "") {
+                return ""
+            }
+            payloads = JSON.parse(payloads)
+            let payloadStr = ""
+
+            for (const [key, value] of Object.entries(payloads)) {
+                if(payloadStr != "") {
+                    payloadStr += ", "
+                }
+
+                payloadStr += key + ": " + value
+            }
+            return payloadStr
+        },
         printQuery: function(url) {
             let pathStart = url.indexOf("?", 8)
             if(pathStart == -1) {
@@ -572,11 +601,11 @@
 
         if(localStorage.selectedColumns) {
             this.selectedColumns = localStorage.selectedColumns.split(',')
-            this.selectedColumns = this.selectedColumns.map( s => parseInt(s) )
         }
     },
 
     props: {
+        showPayloads: Boolean,
         scanID: String
     },
 
