@@ -117,6 +117,7 @@
                                         item-children="SubEntries"
                                         item-text=""
                                         item-key="ResourcePath"
+                                        :open="fuzzDBOpen"
                                         :filter="filterFuzzDB"
                                         :search="fuzzDBSearch"
                                         activatable
@@ -234,6 +235,24 @@
       }
     },
 
+    computed: {
+        filterFuzzDB() {
+            return (item, search) => item.Title.toLowerCase().indexOf(search.toLowerCase()) != -1
+        },
+        fuzzDBOpen() {
+            if(this.fuzzDBSearch.length < 3) {
+                return []
+            }
+            else {
+                let expandedItems = []
+                this.fuzzDBItems.forEach(item => {
+                    expandedItems = expandedItems.concat(this.getOpenItems(item, this.fuzzDBSearch))
+                })
+                return expandedItems
+            }
+        },
+    },
+
     methods: {
         ensureSeparatorValidity: function() {
             var startCharacter = String.fromCharCode(187); // »
@@ -262,6 +281,25 @@
                 }
                 
             }
+        },
+        getOpenItems: function(fuzzDBItem, searchTerm) {
+            let open = false
+            let vm = this
+            let openItems = []
+
+            fuzzDBItem.SubEntries.forEach(child => {
+                let childOpenItems = vm.getOpenItems(child, searchTerm)
+                if(childOpenItems.length >= 1) {
+                    open = true
+                }                
+                openItems = openItems.concat(childOpenItems)
+            });
+
+            if(open || fuzzDBItem.Title.toLowerCase().indexOf(searchTerm.toLowerCase()) != -1) {
+                openItems.push(fuzzDBItem.ResourcePath)
+            }
+
+            return openItems
         },
         insertSeparatorIntoRequest: function() {
             var requestControl = document.getElementById("textarea_request");
@@ -413,12 +451,6 @@
                 vm.runDisabled = false
                 vm.processingClass = "d-none"
             });
-        }
-    },
-
-    computed: {
-        filterFuzzDB() {
-            return (item, search) => item.Title.toLowerCase().indexOf(search.toLowerCase()) != -1
         }
     },
 
