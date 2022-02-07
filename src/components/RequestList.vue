@@ -1,6 +1,14 @@
 <template>
     <div :style="cssVars">
-        <v-card height="calc(100vh - 50px)" class="pl-10 pr-10 pt-5" elevation="0" tiled v-if="loading || requests.length != 0 || scanID != undefined || search != '' || protocol != ''">
+        <v-row class="pl-14 pr-14 pt-5" v-if="!showPayloads && settings != null && !settings.Http11ProxyListening">
+            <v-col md="12">
+                <v-alert border="right" colored-border type="error" elevation="2">
+                    HTTP Proxy is not listening on: {{settings.Http11ProxyAddr}} (requests will not be received/intercepted)
+                    <v-btn text link to="/settings" small class="float-end">Settings</v-btn>
+                </v-alert>
+            </v-col>
+        </v-row>
+        <v-card height="calc(100vh - 50px)" class="pl-10 pr-10 pt-5" elevation="0" tiled v-if="loading || requests.length != 0 || scanID != undefined || search != '' || protocol != ''">            
             <v-row>
                 <v-col md="4">
                 </v-col>
@@ -219,6 +227,7 @@
         search: '',
         selectedColumns: ['time', 'url', 'response_size', 'response_time', 'verb', 'response_status_code', 'payloads', 'flags'],
         selectedRequest: {},
+        settings: null,
         showColumnSelectionMenu: false,
         sortColumn: 'time',
         sortDirection: 'asc',
@@ -347,6 +356,16 @@
                     vm.scrollToBottom()
                     vm.initialLoad = false
                 }
+            })
+        },
+        loadSettings: function() {
+            let vm = this
+            this.loading = true
+            vm.requests = []
+
+            this.$http.get('/proxy/settings')
+            .then(function (response) {
+                vm.settings = response.data
             })
         },
         onRowClick: function(item) {
@@ -598,6 +617,10 @@
 
     mounted: function() {
         this.loadRequests()
+
+        if(this.showPayloads == false) {
+            this.loadSettings()
+        }
 
         if(localStorage.selectedColumns) {
             this.selectedColumns = localStorage.selectedColumns.split(',')
