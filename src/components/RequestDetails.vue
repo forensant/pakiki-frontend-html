@@ -57,19 +57,19 @@
             
             <tr class="pt-2" v-if="requestData != ''">
                 <td class="header">Request:</td>
-                <td class="table-details"><pre>{{requestData}}</pre></td>
+                <td class="table-details"><RequestTextDisplay :request="requestData" :is-http="true" /></td>
             </tr>
             <tr class="pt-2" v-if="modifiedRequestData != ''">
                 <td class="header">Modified Request:</td>
-                <td class="table-details"><pre>{{modifiedRequestData}}</pre></td>
+                <td class="table-details"><RequestTextDisplay :request="modifiedRequestData" :is-http="true" /></td>
             </tr>
             <tr class="pt-2" v-if="responseData != ''">
                 <td class="header">Response:</td>
-                <td class="table-deatils"><pre>{{responseData}}</pre></td>
+                <td class="table-deatils"><RequestTextDisplay :request="responseData" :is-http="true" /></td>
             </tr>
             <tr class="pt-2" v-if="modifiedResponseData != ''">
                 <td class="header">Modified Response:</td>
-                <td class="table-deatils"><pre>{{modifiedResponseData}}</pre></td>
+                <td class="table-deatils"><RequestTextDisplay :request="modifiedResponseData" :is-http="true" /></td>
             </tr>
 
             <tr class="pt-2" v-if="request.Protocol == 'Websocket'">
@@ -88,15 +88,14 @@
                             <td class="no-wrap">{{packet.Direction}}</td>
                             <td class="no-wrap">{{JSON.parse(packet.DisplayData).opcode}}</td>
                             <td>
-                                <!-- TODO: Some hex control -->
                                 <div v-if="'ModifiedData' in packet">
                                     <strong>Original:</strong><br>
-                                    {{base64Decode(packet.Data)}}<br><br>
+                                    <RequestTextDisplay :request="base64Decode(packet.Data)" :is-httop="false" /><br><br>
                                     <strong>Modified:</strong><br>
-                                    {{base64Decode(packet.ModifiedData)}}
+                                    <RequestTextDisplay :request="base64Decode(packet.ModifiedData)" :is-http="false" />
                                 </div>
                                 <div v-else>
-                                    {{base64Decode(packet.Data)}}
+                                    <RequestTextDisplay :request="base64Decode(packet.Data)" :is-http="false"/>
                                 </div>
                             </td> 
                         </tr>
@@ -113,13 +112,14 @@
 </template>
 
 <script>
+  import RequestTextDisplay from './RequestTextDisplay';
   import {PrintDate} from '../mixins/common.js'
 
   export default {
     name: 'RequestDetails',
 
     components: {
-        
+        RequestTextDisplay
     },
 
     props: [
@@ -301,26 +301,26 @@
   }
 
   .theme--dark .tbl_websocket_messages {
-        border: 1px solid rgba(255,255,255,0.2);
-    }
+      border: 1px solid rgba(255,255,255,0.2);
+  }
 
-    .theme--dark .tbl_websocket_messages th {
-        border: 1px solid rgba(255,255,255,0.2);
-    }
+  .theme--dark .tbl_websocket_messages th {
+      border: 1px solid rgba(255,255,255,0.2);
+  }
 
-    .theme--dark .tbl_websocket_messages td {
-        border: 1px solid rgba(255,255,255,0.2);
-    }
+  .theme--dark .tbl_websocket_messages td {
+      border: 1px solid rgba(255,255,255,0.2);
+  }
 
-    .theme--light  .tbl_websocket_messages {
-        border: 1px solid rgba(0,0,0,0.2);
-    }
+  .theme--light  .tbl_websocket_messages {
+      border: 1px solid rgba(0,0,0,0.2);
+  }
 
-    .theme--light  .tbl_websocket_messages th {
-        border: 1px solid rgba(0,0,0,0.2);
-    }
+  .theme--light  .tbl_websocket_messages th {
+      border: 1px solid rgba(0,0,0,0.2);
+  }
 
-    .theme--light  .tbl_websocket_messages td {
-        border: 1px solid rgba(0,0,0,0.2);
-    }
+  .theme--light  .tbl_websocket_messages td {
+      border: 1px solid rgba(0,0,0,0.2);
+  }
 </style>
