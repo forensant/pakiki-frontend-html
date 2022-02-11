@@ -7,6 +7,16 @@
             <v-toolbar-title>{{status}} Inject Scan</v-toolbar-title>
             <v-spacer></v-spacer>
 
+            <v-tooltip bottom>
+                <template v-slot:activator="{ on, attrs }">
+                    <v-btn :to="'/inject/clone/' + scan.GUID" icon v-bind="attrs" v-on="on">    
+                        <v-icon>mdi-file-multiple</v-icon>
+                    </v-btn>
+                </template>
+
+                <span>Clone</span>
+            </v-tooltip>
+
             <v-tooltip bottom v-if="scan.Archived == false && scan.PercentCompleted == 100">
                 <template v-slot:activator="{ on, attrs }">
                     <v-btn 

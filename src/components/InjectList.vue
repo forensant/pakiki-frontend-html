@@ -102,7 +102,7 @@
             </v-col>
             
             <v-col v-if="scansHaveBeenStarted" cols="9">
-                <InjectProperties v-if="selectedScan == '' || selectedScan == 'add'"></InjectProperties>
+                <InjectProperties v-if="selectedScan == '' || selectedScan == 'add' || selectedScan == 'clone'"></InjectProperties>
                 <InjectRunningOrComplete v-else :scan="selectedScan"></InjectRunningOrComplete>
             </v-col>
         </v-row>
@@ -126,7 +126,6 @@
             InjectProperties,
             InjectRunningOrComplete,
         },
-
 
         computed: {
             scansHaveBeenStarted: function() {
@@ -287,7 +286,7 @@
 
         watch: {
             '$route.params.scan_id': function (id) {
-                if(id == 'add') {
+                if(id == 'add' || id == 'clone') {
                     this.selectedScan = ''
                 }
             }

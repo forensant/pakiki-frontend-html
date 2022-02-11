@@ -90,6 +90,12 @@
                     <v-card-title>Payloads</v-card-title>
 
                     <v-card-text>
+                        <v-row v-if="payloadError">
+                            <v-col md="12">
+                                {{payloadError}}
+                            </v-col>
+                        </v-row>
+
                         <v-row>
                             <v-col md="4">
                                 <v-card outlined max-height="400" height="400" class="overflow-y-auto">
@@ -229,6 +235,7 @@
           iterateFrom:        '',
           iterateTo:          '',
           injectPointError:   '',
+          payloadError: '',
 
           processingClass:    "d-none",
           runDisabled:        false,
@@ -254,6 +261,36 @@
     },
 
     methods: {
+        cloneScan: function(scan_id) {
+            let vm = this
+            this.$http.get('/inject_operation', {
+                params: {
+                    guid: scan_id
+                }
+            })
+            .then(function (response) {
+                vm.hostname = response.data.Host
+                vm.protocol = (response.data.SSL ? 'https://' : 'http://')
+                vm.title = response.data.Title
+                vm.fuzzDBSelected = response.data.FuzzDB
+                vm.iterateFrom = response.data.IterateFrom
+                vm.iterateTo = response.data.IterateTo
+                
+                if(response.data.CustomFilenames.length != 0) {
+                    vm.payloadError = 'Cannot load custom files from cloned scan, these will need to be manually reselected.'
+                }
+
+                let req = ''
+                response.data.Request.forEach ((requestPart) => {
+                    let data = window.atob(requestPart.RequestPart)
+                    if(requestPart.Inject) {
+                        data = "»" + data  + "«"
+                    }
+                    req += data
+                });
+                vm.request = req
+            })
+        },
         ensureSeparatorValidity: function() {
             var startCharacter = String.fromCharCode(187); // »
             var endCharacter   = String.fromCharCode(171); // «
@@ -460,9 +497,15 @@
         this.$http.get('/inject_operations/payloads')
             .then(function (response) {
                 vm.fuzzDBItems = response.data.SubEntries
+
+                // do this after the payloads have loaded, so they can be selected
+                if(vm.$route.params.scan_id == 'clone') {
+                    vm.cloneScan(vm.$route.params.request_id)
+                }
             })
 
-        if('request_id' in this.$route.params) {
+
+        if('request_id' in this.$route.params && this.$route.params.scan_id == 'add') {
             this.$http.get('/project/request', {
                 params: {
                     guid: vm.$route.params.request_id,
@@ -490,6 +533,8 @@
                 this.knownFilesSelected = []
                 this.iterateFrom = ''
                 this.iterateTo = ''
+                this.payloadError = ''
+                this.injectPointError = ''
             }
         }
     },
