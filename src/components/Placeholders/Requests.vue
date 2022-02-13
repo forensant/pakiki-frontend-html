@@ -10,7 +10,7 @@
                     
                     <strong>1. Install Certificate</strong>
                     <p>
-                        In order to intercept TLS traffic, you'll need to install the root certificate into your browser or operating system. You can download the root certificate authority certificate from <a :href="$baseLocation + '/proxy/ca_certificate.pem'">here</a>.
+                        In order to intercept TLS traffic, you'll need to install the root certificate into your browser or operating system. You can download the root certificate authority certificate from <a :href="$store.state.baseLocation + '/proxy/ca_certificate.pem'">here</a>.
                         How to set this up is browser/system dependent. If you're unsure how to do it, consult your browser's documentation, or search online for the latest instructions.
                     </p>
 

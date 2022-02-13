@@ -268,10 +268,6 @@
         }
     },
 
-    created: function() {
-        this.startWebsocket()
-    },
-
     destroyed: function() {
         this.closingList = true
         if(this.connection != null && this.connection.readyState == 1) {
@@ -356,6 +352,8 @@
                     vm.scrollToBottom()
                     vm.initialLoad = false
                 }
+
+                vm.startWebsocket();
             })
         },
         loadSettings: function() {
@@ -392,7 +390,8 @@
         },
         onWebsocketConnectionClose: function(e) {
             let vm = this
-            if(vm.closingList) {
+            // code 1006 in Chrome is a connection error, and probably indicates we're unauthorised
+            if(vm.closingList || e.code == 1006) {
                 return
             }
             console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
@@ -559,7 +558,7 @@
                 this.connection.close(1000)
             }
 
-            let url = this.$websocketUrl
+            let url = this.$store.getters.websocketUrl
 
             let objectFieldFilter = {
                 ObjectType: 'HTTP Request'
@@ -576,7 +575,7 @@
                 objectFieldFilter['ScanID'] = this.scanID
             }
 
-            url += "?objectfieldfilter=" + encodeURIComponent(JSON.stringify(objectFieldFilter))
+            url += "objectfieldfilter=" + encodeURIComponent(JSON.stringify(objectFieldFilter))
 
             let filter = ''
 
@@ -616,14 +615,14 @@
     },
 
     mounted: function() {
+        if(localStorage.selectedColumns) {
+            this.selectedColumns = localStorage.selectedColumns.split(',')
+        }
+
         this.loadRequests()
 
         if(this.showPayloads == false) {
             this.loadSettings()
-        }
-
-        if(localStorage.selectedColumns) {
-            this.selectedColumns = localStorage.selectedColumns.split(',')
         }
     },
 

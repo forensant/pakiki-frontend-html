@@ -117,10 +117,6 @@
     export default {
         name: 'InjectList',
 
-        created: function() {
-            this.startWebsocket()
-        },
-
         components: {
             InjectPlaceholder,
             InjectProperties,
@@ -217,7 +213,9 @@
             },
             onWebsocketConnectionClose: function(e) {
                 let vm = this
-                if(vm.closingList) {
+                // 1006 is fired when we're unauthorised, so we'll wait for the browser-wide reload
+                console.log(e)
+                if(vm.closingList || e.code == 1006) {
                     return
                 }
                 console.log('Inject socket is closed. Reconnect will be attempted in 1 second.', e.reason);
@@ -244,8 +242,8 @@
                     this.connection.close(1000);
                 }
 
-                let url = this.$websocketUrl
-                url += "?objectfieldfilter=" + encodeURIComponent(JSON.stringify( {ObjectType: 'Inject Operation'} ))
+                let url = this.$store.getters.websocketUrl
+                url += "objectfieldfilter=" + encodeURIComponent(JSON.stringify( {ObjectType: 'Inject Operation'} ))
 
                 this.connection = new WebSocket(url);
                 this.connection.addEventListener("close", this.onWebsocketConnectionClose);
@@ -270,20 +268,20 @@
                 };
             }
         },
-        
+
         mounted: function() {
             let vm = this
-
             this.$http.get('/inject_operations')
                 .then(function (response) {
                     response.data.forEach(function(injectObj) {
                         vm.addInjectObjToArray(injectObj)
                     })
 
+                    vm.startWebsocket()
                     vm.loading = false
                 })
         },
-
+        
         watch: {
             '$route.params.scan_id': function (id) {
                 if(id == 'add' || id == 'clone') {

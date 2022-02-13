@@ -1,16 +1,17 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import VueVirtualScroller from 'vue-virtual-scroller'
+import Vuex from 'vuex'
 import App from './App.vue'
 import vuetify from './plugins/vuetify';
 import axios from 'axios'
-
 import InjectList from './components/InjectList'
 import RequestTabs from './components/RequestTabs'
 import Settings from './components/Settings'
 
 import '@/mixins/common'
 
+Vue.use(Vuex)
 Vue.use(VueRouter)
 Vue.use(VueVirtualScroller)
 
@@ -36,13 +37,45 @@ if(Vue.config.devtools) {
 }
 
 export const customAxios = axios.create({
-  baseURL: baseLocation,
-  /*withCredentials: true,*/
+  baseURL: baseLocation
 })
 
-Vue.prototype.$baseLocation = baseLocation
+const store = new Vuex.Store({
+  state: {
+    apiKey: '',
+    baseLocation: baseLocation,
+  },
+  getters: {
+    websocketUrl (state) {
+      var url = (state.baseLocation + "/project/notifications")
+      url = url.replace("http://", "ws://").replace("https://", "wss://") + "?"
+
+      if(state.apiKey != '') {
+        url += "api_key=" + state.apiKey + "&"
+      }
+
+      return url
+    }
+  },
+  mutations: {
+    updateAPIKey: function(state, newKey) { state.apiKey = newKey; }
+  }
+});
+
+/*global CORE_API_KEY*/
+/*eslint no-undef: "error"*/
+
+let key = CORE_API_KEY
+if(key == '' && localStorage.coreAPIKey) {
+  key = localStorage.coreAPIKey
+}
+
+if(key != '') {
+  customAxios.defaults.headers.common['X-API-Key'] = key
+  store.commit('updateAPIKey', key)
+}
+
 Vue.prototype.$http = customAxios
-Vue.prototype.$websocketUrl = (baseLocation + "/project/notifications").replace("http://", "ws://").replace("https://", "wss://")
 
 const router = new VueRouter({
   routes // short for `routes: routes`
@@ -51,5 +84,6 @@ const router = new VueRouter({
 new Vue({
   vuetify,
   router,
-  render: h => h(App),
+  store,
+  render: h => h(App)
 }).$mount('#app')

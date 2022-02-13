@@ -14,7 +14,7 @@
                     <v-card-actions>
                         <v-btn
                             text
-                            :href="$baseLocation + '/proxy/ca_certificate.pem'"
+                            :href="$store.state.baseLocation + '/proxy/ca_certificate.pem'"
                         >
                             Download
                         </v-btn>
