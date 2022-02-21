@@ -508,14 +508,27 @@
         if('request_id' in this.$route.params && this.$route.params.scan_id == 'add') {
             this.$http.get('/project/request', {
                 params: {
-                    guid: vm.$route.params.request_id,
-                    highlight_parameters: true
-                }
+                    guid: vm.$route.params.request_id                }
             })
             .then(function (response) {
-                vm.hostname = response.data.Hostname,
-                vm.protocol = response.data.Protocol,
-                vm.request  = window.atob(response.data.RequestData)
+                vm.hostname = response.data.Hostname
+                vm.protocol = response.data.Protocol
+
+                let requestParts = response.data.SplitRequest
+                
+                if(requestParts.length == 0) {
+                    vm.request = window.atob(response.data.RequestData)
+                }
+                else {
+                    vm.request = ''
+                    requestParts.forEach(e => {
+                        let data = window.atob(e.RequestPart)
+                        if(e.Inject) {
+                            data = "»" + data + "«"
+                        }
+                        vm.request += data
+                    });
+                }
             })
         }
     },
