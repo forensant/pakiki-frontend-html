@@ -43,7 +43,8 @@
         <v-row>
             <v-col align="end">
                 <v-btn
-                    color="primary"
+                    color="green"
+                    dark
                     elevation="2"
                     @click="sendRequest"
                 >

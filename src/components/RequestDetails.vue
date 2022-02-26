@@ -65,7 +65,10 @@
             </tr>
             <tr class="pt-2" v-if="responseData != ''">
                 <td class="header">Response:</td>
-                <td class="table-deatils"><RequestTextDisplay :request="responseData" :is-http="true" /></td>
+                <td class="table-deatils">
+                    <RequestTextDisplay v-if="!largeResponse" :request="responseData" :is-http="true" />
+                    <span v-else>The response is too large to display. Please use a desktop client.</span>
+                </td>
             </tr>
             <tr class="pt-2" v-if="modifiedResponseData != ''">
                 <td class="header">Modified Response:</td>
@@ -129,6 +132,7 @@
     data: () => ({
         dataPackets: [],
         displayDetails: {},
+        largeResponse: false,
         loading: true,
         modifiedRequestData: '',
         modifiedResponseData: '',
@@ -178,6 +182,7 @@
                     vm.responseData = window.atob(response.data.Response)
                     vm.modifiedRequestData  = window.atob(response.data.ModifiedRequest)
                     vm.modifiedResponseData = window.atob(response.data.ModifiedResponse)
+                    vm.largeResponse = response.data.LargeResponse
                     vm.dataPackets = vm.processDataPackets(response.data.DataPackets)
                     vm.loading = false
                 })
