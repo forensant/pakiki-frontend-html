@@ -70,6 +70,12 @@
                     <span v-else>The response is too large to display. Please use a desktop client.</span>
                 </td>
             </tr>
+            <tr class="pt-2" v-if="largeResponse">
+                <td class="header">Response:</td>
+                <td class="table-deatils">
+                    <span>The response is too large to display. Please use a desktop client.</span>
+                </td>
+            </tr>
             <tr class="pt-2" v-if="modifiedResponseData != ''">
                 <td class="header">Modified Response:</td>
                 <td class="table-deatils"><RequestTextDisplay :request="modifiedResponseData" :is-http="true" /></td>
@@ -151,10 +157,9 @@
         'request.Notes': function(newVal) {
             if(!this.loading) {
                 let bodyFormData = new FormData()
-                bodyFormData.append("guid", this.request.GUID)
                 bodyFormData.append("notes", newVal)
 
-                this.$http.put('/project/request', bodyFormData)
+                this.$http.patch('/requests/' + this.request.GUID + "/notes", bodyFormData)
             }
         }
     },
@@ -170,12 +175,16 @@
         populateRequestResponse() {
             let vm = this
 
+            if(this.request == null) {
+                return
+            }
+
             if(this.request.GUID == undefined) {
                 this.loading = false
                 return
             }
 
-            this.$http.get('/project/requestresponse?guid=' + this.request.GUID)
+            this.$http.get('/requests/' + this.request.GUID + '/contents')
                 .then(function (response) {
                     vm.displayDetails = {}
                     vm.requestData  = window.atob(response.data.Request)

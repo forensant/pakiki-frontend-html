@@ -13,6 +13,12 @@
                 <v-text-field v-model="hostname" label="Hostname" />
             </v-col>
             <v-col md="4" class="text-right">
+                <v-progress-circular
+                    v-if="loading_oob"
+                    indeterminate
+                    color="primary"
+                    class="mt-3 mr-5"
+                ></v-progress-circular>
                 <v-tooltip bottom>
                     <template v-slot:activator="{ on, attrs }">
                         <v-btn
@@ -64,7 +70,7 @@
                 ></v-progress-linear>
             </template>
 
-            <RequestDetails v-bind:request="response"/>
+            <RequestDetails v-bind:request="response" v-if="response != null"/>
         </v-card>
     </v-container>
   </div>
@@ -85,6 +91,7 @@
       return {
           hostname:      '',
           loading:       false,
+          loading_oob:   false,
           protocol:      'https://',
           protocolItems: ['https://', 'http://'],
           request:       '',
@@ -95,20 +102,19 @@
     methods: {
         insertOOBClicked: function() {
             var requestControl = document.getElementById("textarea_request");
+            this.loading_oob = true;
             insertOOBDomain(this.$http,
                 requestControl,
-                (r => this.request = r)
+                (r => {
+                    this.request = r;
+                    this.loading_oob = false;
+                })
             )
         },
         populateRequestData: function() {
             let vm = this
             if('request_id' in this.$route.params) {
-                this.$http.get('/project/request', {
-                    params: {
-                        guid: vm.$route.params.request_id,
-                        highlight_parameters: true
-                    }
-                })
+                this.$http.get('/requests/' + vm.$route.params.request_id)
                 .then(function (response) {
                     vm.hostname = response.data.Hostname,
                     vm.protocol = response.data.Protocol,
@@ -132,7 +138,7 @@
                 host:    this.hostname
             }
 
-            this.$http.post('/proxy/make_request', request)
+            this.$http.post('/requests/make', request)
             .then(function (response) {
                 vm.loading = false
                 vm.response = response.data

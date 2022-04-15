@@ -18,7 +18,7 @@ Vue.mixin({
 })
 
 export function insertOOBDomain(httpClient, widget, requestSetFunc) {
-  httpClient.get('/proxy/out_of_band/url').then(function (response) {
+  httpClient.get('/out_of_band/url').then(function (response) {
       let domain = response.data
       
       if (widget.selectionStart || widget.selectionStart == '0') {

@@ -47,7 +47,7 @@ const store = new Vuex.Store({
   },
   getters: {
     websocketUrl (state) {
-      var url = (state.baseLocation + "/project/notifications")
+      var url = (state.baseLocation + "/notifications")
       url = url.replace("http://", "ws://").replace("https://", "wss://") + "?"
 
       if(state.apiKey != '') {

@@ -70,7 +70,7 @@
         </v-card>
 
         <v-card
-            class="mx-auto mt-10"
+            class="mx-auto mt-10 mb-10"
             max-width="344"
             outlined
         >

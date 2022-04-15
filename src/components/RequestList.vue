@@ -335,7 +335,7 @@
 
             let protocol = this.protocolStr()
             
-            this.$http.get('/project/requests', {
+            this.$http.get('/requests', {
                 params: {
                     scanid: vm.scanID,
                     filter: vm.search,
@@ -419,8 +419,9 @@
                         }
                     })
 
-                    if(vm.selectedRequest.GUID == jsonObj.GUID) {
+                    if(vm.selectedRequest.GUID == jsonObj.GUID && jsonObj.ResponseSize < 5 * 1024 * 1024) {
                         // forces a reload of the request display if there's an update
+                        // but only if the request isn't too big (otherwise we get flickering as large requests are loaded)
                         vm.selectedRequest = jsonObj
                     }
 

@@ -147,18 +147,14 @@
             let vm = this
 
             let bodyFormData = new FormData()
-            bodyFormData.append("guid", vm.scan.GUID)
             bodyFormData.append("archive", true)
 
-            this.$http.put('/inject_operation/archive', bodyFormData)
+            this.$http.patch('/inject_operations/' + vm.scan.GUID + '/archive', bodyFormData)
         },
         onCancel: function() {
             let vm = this
 
-            let bodyFormData = new FormData()
-            bodyFormData.append("guid", vm.scan.GUID)
-
-            this.$http.put('/scripts/cancel', bodyFormData)
+            this.$http.put('/scripts/' + vm.scan.GUID + '/cancel')
         },
         requestDecode: function(scan) {
             var req = ""
@@ -178,10 +174,10 @@
         updateTitle: function() {
             let vm = this
 
-            this.$http.put('/inject_operation', {
-                GUID: vm.scan.GUID,
-                Title: vm.scan.Title
-            })
+            let bodyFormData = new FormData()
+            bodyFormData.append("title", true)
+
+            this.$http.patch('/inject_operations/' + vm.scan.GUID + '/title', bodyFormData)
         }
     },
 

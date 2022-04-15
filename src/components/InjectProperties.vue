@@ -69,6 +69,13 @@
                                     </template>
                                     <span>Insert an out of band interaction domain</span>
                                 </v-tooltip>
+
+                                <v-progress-circular
+                                    v-if="loading_oob"
+                                    indeterminate
+                                    color="primary"
+                                    class="mt-3 ml-5"
+                                ></v-progress-circular>
                             </v-col>
                         </v-row>
 
@@ -225,6 +232,7 @@
           title:              '',
           hostname:           '',
           loading:            false,
+          loading_oob:        false,
           protocol:           'https://',
           protocolItems:      ['https://', 'http://'],
           request:            '',
@@ -263,11 +271,7 @@
     methods: {
         cloneScan: function(scan_id) {
             let vm = this
-            this.$http.get('/inject_operation', {
-                params: {
-                    guid: scan_id
-                }
-            })
+            this.$http.get('/inject_operations/' + scan_id)
             .then(function (response) {
                 vm.hostname = response.data.Host
                 vm.protocol = (response.data.SSL ? 'https://' : 'http://')
@@ -411,9 +415,13 @@
         },
         insertOOBClicked: function() {
             var requestControl = document.getElementById("textarea_request");
+            this.loading_oob = true;
             insertOOBDomain(this.$http,
                 requestControl,
-                (r => this.request = r)
+                (r => {
+                    this.request = r;
+                    this.loading_oob = false;
+                })
             )
         },
         requestToInjectFormat: function() {
@@ -506,10 +514,7 @@
 
 
         if('request_id' in this.$route.params && this.$route.params.scan_id == 'add') {
-            this.$http.get('/project/request', {
-                params: {
-                    guid: vm.$route.params.request_id                }
-            })
+            this.$http.get('/requests/' + vm.$route.params.request_id)
             .then(function (response) {
                 vm.hostname = response.data.Hostname
                 vm.protocol = response.data.Protocol
