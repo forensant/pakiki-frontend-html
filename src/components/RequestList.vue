@@ -133,8 +133,8 @@
                                 <span class="path">{{printQuery(item.URL)}}</span>
                             </span>
 
-                            <span v-bind:class="{'sorted-column': (sortColumn == 'response_size')}" v-if="selectedColumns.includes('response_size')">
-                                {{printSize(item.ResponseSize)}}
+                            <span v-bind:class="{'sorted-column': (sortColumn == 'response_content_length')}" v-if="selectedColumns.includes('response_content_length')">
+                                {{printSize(item.ResponseContentLength)}}
                             </span>
                             
                             <span v-bind:class="{'sorted-column': (sortColumn == 'response_time')}" v-if="selectedColumns.includes('response_time')">
@@ -206,7 +206,7 @@
             {name: 'Time', col: 'time', space: 1},
             {name: 'Protocol', col: 'protocol', space: 1},
             {name: 'URL', col: 'url', space: 5},
-            {name: 'Size', col: 'response_size', space: 1},
+            {name: 'Size', col: 'response_content_length', space: 1},
             {name: 'Duration', col: 'response_time', space: 1},
             {name: 'Verb', col: 'verb', space: 1},
             {name: 'Status', col: 'response_status_code', space: 1},
@@ -225,7 +225,7 @@
         protocols: ['All', 'HTTP', 'Websockets', 'Out of Band'],
         requests: [],
         search: '',
-        selectedColumns: ['time', 'url', 'response_size', 'response_time', 'verb', 'response_status_code', 'payloads', 'flags'],
+        selectedColumns: ['time', 'url', 'response_content_length', 'response_time', 'verb', 'response_status_code', 'payloads', 'flags'],
         selectedRequest: {},
         settings: null,
         showColumnSelectionMenu: false,
@@ -285,7 +285,7 @@
             let col_map = {
                 time: 'Time',
                 url: 'URL',
-                'response_size': 'ResponseSize',
+                'response_content_length': 'ResponseContentLength',
                 'response_time': 'ResponseTime',
                 verb: 'Verb',
                 response_status_code: 'ResponseStatusCode'
@@ -419,7 +419,7 @@
                         }
                     })
 
-                    if(vm.selectedRequest.GUID == jsonObj.GUID && jsonObj.ResponseSize < 5 * 1024 * 1024) {
+                    if(vm.selectedRequest.GUID == jsonObj.GUID && jsonObj.response_content_length < 5 * 1024 * 1024) {
                         // forces a reload of the request display if there's an update
                         // but only if the request isn't too big (otherwise we get flickering as large requests are loaded)
                         vm.selectedRequest = jsonObj
@@ -608,7 +608,7 @@
         tableFieldsDiffer: function(req1, req2) {
             return req1.time != req2.time || 
                 req1.url != req2.url ||
-                req1.response_size != req2.response_size || 
+                req1.response_content_length != req2.response_content_length || 
                 req1.response_time != req2.response_time || 
                 req1.verb != req2.verb || 
                 req1.status != req2.status
