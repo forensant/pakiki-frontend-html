@@ -80,7 +80,7 @@
 
                 <v-row>
                     <v-col md="7" class="text-14">
-                        <strong>Request:</strong>
+                        <strong>Original Request:</strong>
                         <pre>{{requestDecode(scan)}}</pre>
                     </v-col>
 
