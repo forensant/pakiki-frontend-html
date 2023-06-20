@@ -3,7 +3,7 @@ module.exports = {
     config
         .plugin('html')
         .tap(args => {
-            args[0].title = "Proximity";
+            args[0].title = "Pakiki Proxy";
             return args;
         })
   },

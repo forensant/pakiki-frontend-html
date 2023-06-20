@@ -11,10 +11,10 @@
       <v-list>
         <v-list-item class="px-2">
           <v-list-item-avatar>
-            <v-img src="/images/Logo32.png" srcset="/images/Logo64.png 2x" alt="Proximity Logo"></v-img>
+            <v-img src="/images/Logo32.png" srcset="/images/Logo64.png 2x" alt="Pakiki Logo"></v-img>
           </v-list-item-avatar>
 
-          <v-list-item-title>Proximity</v-list-item-title>
+          <v-list-item-title>Pakiki</v-list-item-title>
         </v-list-item>
       </v-list>
 
@@ -55,7 +55,7 @@
 
       <template v-slot:append>
         <div class="pa-2 text-center" v-if="drawerCollapsed == false">
-          <a href="https://ProximityHQ.com/" class="green--text text--lighten-3 no-underline">ProximityHQ.com</a>
+          <a href="https://pakikiproxy.com/" class="green--text text--lighten-3 no-underline">PakikiProxy.com</a>
         </div>
       </template>
 

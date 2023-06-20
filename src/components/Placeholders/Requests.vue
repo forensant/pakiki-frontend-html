@@ -16,7 +16,7 @@
 
                     <strong>2. Set your proxy</strong>
                     <p>
-                        Proximity is listening for traffic on <a :href="'localhost' + http11ProxyAddress">localhost{{http11ProxyAddress}}</a>. You'll need to configure your browser to use Proximity as an upstream proxy.
+                        Pakiki is listening for traffic on <a :href="'localhost' + http11ProxyAddress">localhost{{http11ProxyAddress}}</a>. You'll need to configure your browser to use Pakiki as an upstream proxy.
                         Browser plugins such as <a href="https://addons.mozilla.org/en-US/firefox/addon/foxyproxy-standard/">FoxyProxy</a> for Firefox, and <a href="https://chrome.google.com/webstore/detail/smartproxy/jogcnplbkgkfdakgdenhlpcfhjioidoj">SmartProxy</a> for Chrome can be set up to only proxy the traffic you want to intercept.
                     </p>
                 </div>
