@@ -4,7 +4,7 @@
 </picture>
 
 ## Overview
-Pakiki is an intercepting proxy, allowing you to view and manipulate network requests between your web browser and the servers its communicating with. It is designed for web application penetration testing, but could be used for general debugging of applications, etc. It is similar in principle to mitmproxy or OWASP ZAP.
+Pākiki is an intercepting proxy, allowing you to view and manipulate network requests between your web browser and the servers its communicating with. It is designed for web application penetration testing, but could be used for general debugging of applications, etc. It is similar in principle to mitmproxy or OWASP ZAP.
 
 It takes the philosophy of do one thing, and do it well. The intent is not to pack in features which are rarely, if ever, used in practice. This is especially true where good quality standalone tools already exist.
 
@@ -22,7 +22,7 @@ Download from the latest release from [https://github.com/forensant/pakiki-core/
 ## Development/build instructions
 
 ### Dependencies
-You will need npm in order to build or run the frontend. You will also likely need [Pakiki Core](https://github.com/forensant/pakiki-core/releases) as well, either pre-compiled or built from scratch.
+You will need npm in order to build or run the frontend. You will also likely need [Pākiki Core](https://github.com/forensant/pakiki-core/releases) as well, either pre-compiled or built from scratch.
 
 #### Project setup
 ```
