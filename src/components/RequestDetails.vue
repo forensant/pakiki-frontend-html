@@ -55,32 +55,36 @@
                 <td class="table-details">{{value}}</td>
             </tr>
             
-            <tr class="pt-2" v-if="requestData != ''">
-                <td class="header">Request:</td>
-                <td class="table-details"><RequestTextDisplay :request="requestData" :is-http="true" /></td>
-            </tr>
             <tr class="pt-2" v-if="modifiedRequestData != ''">
                 <td class="header">Modified Request:</td>
-                <td class="table-details"><RequestTextDisplay :request="modifiedRequestData" :is-http="true" /></td>
+                <td class="table-details"><RequestTextDisplay :request="modifiedRequestData" :is-http="true" :highlight="isUtf8"/></td>
             </tr>
+
+            <tr class="pt-2" v-if="requestData != ''">
+                <td class="header">{{modifiedRequestData != '' ? 'Original ' : ''}}Request:</td>
+                <td class="table-details pb-8"><RequestTextDisplay :request="requestData" :is-http="true" :highlight="isUtf8"/></td>
+            </tr>
+
+            <tr class="pt-2" v-if="modifiedResponseData != ''">
+                <td class="header">Modified Response:</td>
+                <td class="table-deatils pb-8"><RequestTextDisplay :request="modifiedResponseData" :is-http="true" :highlight="isUtf8" /></td>
+            </tr>
+            
             <tr class="pt-2" v-if="responseData != ''">
-                <td class="header">Response:</td>
-                <td class="table-deatils">
-                    <RequestTextDisplay v-if="!largeResponse" :request="responseData" :is-http="true" />
+                <td class="header">{{modifiedResponseData != '' ? 'Original ' : ''}}Response:</td>
+                <td class="table-deatils pb-8">
+                    <RequestTextDisplay v-if="!largeResponse" :request="responseData" :is-http="true" :highlight="isUtf8"/>
                     <span v-else>The response is too large to display. Please use a desktop client.</span>
                 </td>
             </tr>
+
             <tr class="pt-2" v-if="largeResponse">
                 <td class="header">Response:</td>
-                <td class="table-deatils">
+                <td class="table-deatils pb-8">
                     <span>The response is too large to display. Please use a desktop client.</span>
                 </td>
             </tr>
-            <tr class="pt-2" v-if="modifiedResponseData != ''">
-                <td class="header">Modified Response:</td>
-                <td class="table-deatils"><RequestTextDisplay :request="modifiedResponseData" :is-http="true" /></td>
-            </tr>
-
+            
             <tr class="pt-2" v-if="request.Protocol == 'Websocket'">
                 <td class="header">Messages:</td>
                 <td class="table-details">
@@ -99,7 +103,7 @@
                             <td>
                                 <div v-if="'ModifiedData' in packet">
                                     <strong>Original:</strong><br>
-                                    <RequestTextDisplay :request="base64Decode(packet.Data)" :is-httop="false" /><br><br>
+                                    <RequestTextDisplay :request="base64Decode(packet.Data)" :is-http="false" /><br><br>
                                     <strong>Modified:</strong><br>
                                     <RequestTextDisplay :request="base64Decode(packet.ModifiedData)" :is-http="false" />
                                 </div>
@@ -138,6 +142,7 @@
     data: () => ({
         dataPackets: [],
         displayDetails: {},
+        isUtf8: false,
         largeResponse: false,
         loading: true,
         modifiedRequestData: '',
@@ -184,9 +189,10 @@
                 return
             }
 
-            this.$http.get('/requests/' + this.request.GUID + '/contents')
+            this.$http.get('/requests/' + this.request.GUID + '/contents?highlight=true')
                 .then(function (response) {
                     vm.displayDetails = {}
+                    vm.isUtf8 = response.data.IsUTF8
                     vm.requestData  = window.atob(response.data.Request)
                     vm.responseData = window.atob(response.data.Response)
                     vm.modifiedRequestData  = window.atob(response.data.ModifiedRequest)
@@ -271,6 +277,7 @@
       text-align: right;
       font-weight: bold;
       padding-right: 15px;
+      min-width: 150px;
   }
 
   pre {

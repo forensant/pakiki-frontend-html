@@ -1,5 +1,8 @@
 <template>
-    <div>
+    <div v-if="highlight">
+        <pre v-html="this.request"></pre>
+    </div>
+    <div v-else>
         <pre v-if="isHttp">{{headers}}</pre>
 
         <div v-if="isHex" class="hex">
@@ -93,7 +96,8 @@
 
         props: [
             'is-http',
-            'request'
+            'request',
+            'highlight'
         ],
 
         data: () => ({
