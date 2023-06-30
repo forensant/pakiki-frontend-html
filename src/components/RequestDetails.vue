@@ -1,6 +1,6 @@
 <template>
     <div class="border">
-        <v-menu offset-y v-if="request != null && request.Protocol == 'HTTP/1.1'">
+        <v-menu offset-y v-if="request != null && request.Protocol.includes('HTTP')">
             <template v-slot:activator="{ on, attrs }">
                 <v-btn
                     color="green"
