@@ -41,7 +41,9 @@
                     v-model="request"
                     outlined
                     label="Request"
-                    id="textarea_request">
+                    id="textarea_request"
+                    style="font-family: monospace;"
+                    >
                 </v-textarea>
             </v-col>
         </v-row>
