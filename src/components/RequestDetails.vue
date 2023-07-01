@@ -177,6 +177,11 @@
         base64Decode(str) {
             return window.atob(str)
         },
+        decode(str) {
+            str = Uint8Array.from(atob(str), (m) => m.codePointAt(0))
+            let decoder = new TextDecoder();
+            return decoder.decode(str)
+        },
         populateRequestResponse() {
             let vm = this
 
@@ -193,10 +198,10 @@
                 .then(function (response) {
                     vm.displayDetails = {}
                     vm.isUtf8 = response.data.IsUTF8
-                    vm.requestData  = window.atob(response.data.Request)
-                    vm.responseData = window.atob(response.data.Response)
-                    vm.modifiedRequestData  = window.atob(response.data.ModifiedRequest)
-                    vm.modifiedResponseData = window.atob(response.data.ModifiedResponse)
+                    vm.requestData  = vm.decode(response.data.Request)
+                    vm.responseData = vm.decode(response.data.Response)
+                    vm.modifiedRequestData  = vm.decode(response.data.ModifiedRequest)
+                    vm.modifiedResponseData = vm.decode(response.data.ModifiedResponse)
                     vm.largeResponse = response.data.LargeResponse
                     vm.dataPackets = vm.processDataPackets(response.data.DataPackets)
                     vm.loading = false
