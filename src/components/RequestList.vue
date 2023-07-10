@@ -409,7 +409,10 @@
                     let found = false
                     vm.requests.forEach(function(request, idx) {
                         if(request.GUID == jsonObj.GUID) {
-                            if(vm.tableFieldsDiffer(request, jsonObj)) {
+                            if(jsonObj.Action == "filtered") {
+                                found = true
+                            }
+                            else if(vm.tableFieldsDiffer(request, jsonObj)) {
                                 vm.requests.splice(idx, 1)
                             }
                             else {
@@ -425,7 +428,7 @@
                         vm.selectedRequest = jsonObj
                     }
 
-                    if(!found) {
+                    if(!found && jsonObj.Action != "filtered") {
                         let idx = vm.getInsertIndex(jsonObj)
                         vm.requests.splice(idx, 0, jsonObj)
                         vm.scrollToBottomIfRequired()
