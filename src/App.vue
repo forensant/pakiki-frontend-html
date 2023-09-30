@@ -140,6 +140,11 @@ export default {
         return Promise.reject(error);
       }
     });
+
+    var vm = this
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => { // eslint-disable-line no-unused-vars
+      vm.setTheme(localStorage.getItem('theme'))
+    });
   },
 
   mounted: function() {

@@ -225,10 +225,14 @@
                     }
 
                     if(packet.Direction == "Request") {
-                        this.requestData  = window.atob(packet.Data)
+                        if(this.requestData == '') {
+                            this.requestData  = window.atob(packet.Data)
+                        }
                     }
                     else {
-                        this.responseData  = window.atob(packet.Data)
+                        if(this.responseData == '') {
+                            this.responseData  = window.atob(packet.Data)
+                        }
                     }
                 }
 
